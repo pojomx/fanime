@@ -339,9 +339,9 @@ struct JikanBroadcast: Decodable, Encodable  {
     let timezone: String?
     let string: String?
     
-    func getDayEnum() -> Anime.BroadcastDays? {
+    func getDayEnum() -> Anime.BroadcastDays {
         if let day = day {
-            return Anime.BroadcastDays(rawValue: day)
+            return Anime.BroadcastDays(rawValue: day) ?? .na
         } else {
             return Anime.BroadcastDays.na
         }

@@ -14,9 +14,8 @@ struct AnimeListView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: [
-        SortDescriptor(\Anime.type, order: .forward),          // Primero ordena por tipo descendente
-        SortDescriptor(\Anime.broadcast?.day, order: .reverse),// Primero los que salen el WENDSNEDT
-        SortDescriptor(\Anime.titulo_en)                        // Luego por título ascendente
+        SortDescriptor(\Anime.type),                    // Luego por título ascendente
+        SortDescriptor(\Anime.titulo_en)                   // Luego por título ascendente
     ]) private var animes: [Anime] = []
     
     var grouped: [String: [Anime]] {
@@ -30,65 +29,52 @@ struct AnimeListView: View {
     @State private var observers: Set<AnyCancellable> = []
     
     var body: some View {
+        
+        let tipos = Anime.Tipos.allCases.map(\.rawValue)
+        
         NavigationView {
             VStack {
                 List {
-                    HStack{
-                        ForEach(grouped.keys.sorted(), id: \.self) { key in
-                            Text(key)
-                                .font(.caption)
-                                .padding(6)
-                                .frame(minWidth: 50)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.blue)
-                                        .shadow(radius: 5)
-                                )
-                                .foregroundColor(.white)
-                            
-                        }
-                    }
-                    
-                    ForEach(grouped.keys.sorted(), id: \.self) { type in
-                        
+                    ForEach(tipos, id: \.self) { type in
                         let countedAnime = grouped[type]?.count ?? 0
-                        
+                        if countedAnime > 0 {
                         Section(header: Text(type), footer: HStack {
-                            Spacer()
-                            Text("\(countedAnime) \(countedAnime == 1 ? "anime" : "animes")")
-                                .font(.footnote)
-                        }) {
-                            ForEach(grouped[type] ?? []) { anime in
-                                NavigationLink (destination: AnimeDetailView(anime: anime)) {
-                                    AnimeRowView(anime: anime)
-                                        .swipeActions(edge: .trailing) {
-                                            Button {
-                                                anime.delete.toggle()
-                                                anime.delete_date = Date()
-                                            } label: {
-                                                Label("Eliminar", systemImage: "trash")
-                                            }
-                                        }
-                                        .swipeActions(edge: .leading) {
-                                            Button {
-                                                anime.favorite.toggle()
-                                                anime.favorite_date = Date()
-                                            } label: {
-                                                if anime.favorite {
-                                                    Label("Quitar de favoritos", systemImage: "star")
-                                                        .tint(.secondary)
-                                                } else {
-                                                    Label("Agregar a favoritos", systemImage: "star.fill")
-                                                        .tint(.yellow)
+                                Spacer()
+                                Text("\(countedAnime) \(countedAnime == 1 ? "anime" : "animes")")
+                                    .font(.footnote)
+                            }) {
+                                ForEach(grouped[type] ?? []) { anime in
+                                    NavigationLink (destination: AnimeDetailView(anime: anime)) {
+                                        AnimeRowView(anime: anime)
+                                            .swipeActions(edge: .trailing) {
+                                                Button {
+                                                    anime.delete.toggle()
+                                                    anime.delete_date = Date()
+                                                } label: {
+                                                    Label("Eliminar", systemImage: "trash")
                                                 }
-                                                
-                                                
                                             }
-                                        }
+                                            .swipeActions(edge: .leading) {
+                                                Button {
+                                                    anime.favorite.toggle()
+                                                    anime.favorite_date = Date()
+                                                } label: {
+                                                    if anime.favorite {
+                                                        Label("Quitar de favoritos", systemImage: "star")
+                                                            .tint(.secondary)
+                                                    } else {
+                                                        Label("Agregar a favoritos", systemImage: "star.fill")
+                                                            .tint(.yellow)
+                                                    }
+                                                    
+                                                    
+                                                }
+                                            }
+                                    }
+                                    .listRowBackground(
+                                        anime.delete ? Color.red.opacity(0.2) :
+                                            anime.favorite ? Color.yellow.opacity(0.2) : Color.clear)
                                 }
-                                .listRowBackground(
-                                    anime.delete ? Color.red.opacity(0.2) :
-                                        anime.favorite ? Color.yellow.opacity(0.2) : Color.clear)
                             }
                         }
                     }

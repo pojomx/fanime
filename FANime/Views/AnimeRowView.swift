@@ -57,6 +57,10 @@ struct AnimeRowView: View {
                 
                 
                 HStack {
+                    
+                    Text("[\(anime.type ?? "N/A")]")
+                        .font(.custom("", size: 8))
+                    
                     Text("\(String(describing: anime.broadcast?.day ?? ""))")
                         .font(.caption)
                     

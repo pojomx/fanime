@@ -126,17 +126,17 @@ final class Anime {
         case music = "Music"
         case short = "Short"
         case pv = "PV"
-        
+        case na = "N/A" //Other        case na = "N/A" //Other
     }
     
     enum BroadcastDays: String, CaseIterable {
-        case sunday = "Sunday"
-        case monday = "Monday"
-        case tuesday = "Tuesday"
-        case wednesday = "Wednesday"
-        case thursday = "Thursday"
-        case friday = "Friday"
-        case saturday = "Saturday"
+        case sunday = "Sundays"
+        case monday = "Mondays"
+        case tuesday = "Tuesdays"
+        case wednesday = "Wednesdays"
+        case thursday = "Thursdays"
+        case friday = "Fridays"
+        case saturday = "Saturdays"
         case na = "N/A" //Other
     }
 }

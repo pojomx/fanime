@@ -15,8 +15,7 @@ struct AnimeFavoriteListView: View {
     
     @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete },
            sort: [
-                SortDescriptor(\Anime.type, order: .reverse),   // Primero ordena por tipo descendente
-                SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
+            SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
            ]) private var animes: [Anime] = []
     
     var grouped: [String: [Anime]] {
@@ -24,9 +23,12 @@ struct AnimeFavoriteListView: View {
     }
     
     var body: some View {
+        
+        let dias = Anime.BroadcastDays.allCases.map(\.rawValue)
+        
         NavigationView {
             List {
-                ForEach(grouped.keys.sorted(), id: \.self) { type in
+                ForEach(dias, id: \.self) { type in
                     
                     let countedAnime = grouped[type]?.count ?? 0
                     
@@ -58,11 +60,8 @@ struct AnimeFavoriteListView: View {
                                                 Label("Agregar a favoritos", systemImage: "star.fill")
                                                     .tint(.yellow)
                                             }
-                                            
-                                            
                                         }
                                     }
-                                    
                             }
                         }
                     }
