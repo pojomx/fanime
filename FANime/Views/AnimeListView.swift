@@ -14,13 +14,14 @@ struct AnimeListView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: [
-        SortDescriptor(\Anime.type),                    // Luego por título ascendente
-        SortDescriptor(\Anime.titulo_en)                   // Luego por título ascendente
+        SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
     ]) private var animes: [Anime] = []
     
     var grouped: [String: [Anime]] {
         Dictionary(grouping: animes) { $0.type ?? "N/A" }
     }
+    
+    @State private var errorMessage: String = ""
     
     @State private var isLoading: Bool = false
     @State private var hasNextPage: Bool = false
@@ -29,92 +30,89 @@ struct AnimeListView: View {
     @State private var observers: Set<AnyCancellable> = []
     
     var body: some View {
-        
         let tipos = Anime.Tipos.allCases.map(\.rawValue)
-        
         NavigationView {
-            VStack {
-                List {
-                    ForEach(tipos, id: \.self) { type in
-                        let countedAnime = grouped[type]?.count ?? 0
-                        if countedAnime > 0 {
+            List {
+                ForEach(tipos, id: \.self) { type in
+                    let countedAnime = grouped[type]?.count ?? 0
+                    if countedAnime > 0 {
                         Section(header: Text(type), footer: HStack {
-                                Spacer()
-                                Text("\(countedAnime) \(countedAnime == 1 ? "anime" : "animes")")
-                                    .font(.footnote)
-                            }) {
-                                ForEach(grouped[type] ?? []) { anime in
-                                    NavigationLink (destination: AnimeDetailView(anime: anime)) {
-                                        AnimeRowView(anime: anime)
-                                            .swipeActions(edge: .trailing) {
-                                                Button {
-                                                    anime.delete.toggle()
-                                                    anime.delete_date = Date()
-                                                } label: {
-                                                    Label("Eliminar", systemImage: "trash")
-                                                }
+                            Spacer()
+                            Text("\(countedAnime) \(countedAnime == 1 ? "anime" : "animes")")
+                                .font(.footnote)
+                        }) {
+                            ForEach(grouped[type] ?? []) { anime in
+                                NavigationLink (destination: AnimeDetailView(anime: anime)) {
+                                    AnimeRowView(anime: anime)
+                                        .swipeActions(edge: .trailing) {
+                                            Button {
+                                                anime.delete.toggle()
+                                                anime.delete_date = Date()
+                                            } label: {
+                                                Label("Eliminar", systemImage: "trash")
                                             }
-                                            .swipeActions(edge: .leading) {
-                                                Button {
-                                                    anime.favorite.toggle()
-                                                    anime.favorite_date = Date()
-                                                } label: {
-                                                    if anime.favorite {
-                                                        Label("Quitar de favoritos", systemImage: "star")
-                                                            .tint(.secondary)
-                                                    } else {
-                                                        Label("Agregar a favoritos", systemImage: "star.fill")
-                                                            .tint(.yellow)
-                                                    }
-                                                    
-                                                    
+                                        }
+                                        .swipeActions(edge: .leading) {
+                                            Button {
+                                                anime.favorite.toggle()
+                                                anime.favorite_date = Date()
+                                            } label: {
+                                                if anime.favorite {
+                                                    Label("Quitar de favoritos", systemImage: "star")
+                                                        .tint(.secondary)
+                                                } else {
+                                                    Label("Agregar a favoritos", systemImage: "star.fill")
+                                                        .tint(.yellow)
                                                 }
+                                                
+                                                
                                             }
-                                    }
-                                    .listRowBackground(
-                                        anime.delete ? Color.red.opacity(0.2) :
-                                            anime.favorite ? Color.yellow.opacity(0.2) : Color.clear)
+                                        }
                                 }
+                                .listRowBackground(
+                                    anime.delete ? Color.red.opacity(0.2) :
+                                        anime.favorite ? Color.yellow.opacity(0.2) : Color.clear)
                             }
                         }
                     }
                 }
-                .overlay {
-                    if isLoading {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.white.opacity(0.9))
-                                .frame(width: 500, height: 1000)
-                            ContentUnavailableView("Content is loading", systemImage: "heart.circle", description: Text("We are downloading content..."))
-                        }
-                        
-                    } else {
-                        if animes.isEmpty {
-                            
-                            ZStack {
-                                ContentUnavailableView("No Anime", systemImage: "heart.circle", description: Text("No anime has been downloaded"))
-                            }
-                        }
+            }
+            .overlay {
+                if isLoading {
+                    ZStack {
+                        Rectangle()
+                            .fill(Color.white.opacity(0.9))
+                            .frame(width: 500, height: 1000)
+                        ContentUnavailableView("Content is loading", systemImage: "heart.circle", description: Text("We are downloading content..."))
                     }
                     
+                } else {
+                    if animes.isEmpty {
+                        
+                        ZStack {
+                            ContentUnavailableView("No Anime", systemImage: "heart.circle", description: Text("No anime has been downloaded"))
+                        }
+                    }
                 }
-                .navigationTitle("Temporada")
-                .toolbar {
-                    ToolbarItem {
-                        if self.isLoading {
-                            ProgressView()
-                        } else {
-                            Button(action: fetchData) {
-                                Label("Add Item", systemImage: "arrow.clockwise")
-                            }
+                
+            }
+            .navigationTitle("Temporada")
+            .toolbar {
+                ToolbarItem {
+                    if self.isLoading {
+                        ProgressView()
+                    } else {
+                        Button(action: fetchData) {
+                            Label("Add Item", systemImage: "arrow.clockwise")
                         }
                     }
                 }
             }
-            .onAppear() {
-                print("onAppear")
-            }
         }
+        .onAppear() {
+            print("onAppear")
+        }
+    
     }
     
     private func fetchData() {
@@ -122,7 +120,15 @@ struct AnimeListView: View {
         JikanService.shared.getSeasonNow(page: self.currentPage)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { _ in },
+                receiveCompletion: { result in
+                        switch result {
+                        case .failure(let error):
+                            errorMessage = error.localizedDescription
+                            break
+                        case .finished:
+                            print("Finished fetching data")
+                        }
+                },
                 receiveValue: { jikanModel in
                     jikanModel.data.forEach { animeData in
                         addAnime(anime: Anime(data:animeData), context: modelContext)
@@ -167,6 +173,18 @@ struct AnimeListView: View {
         context.insert(anime)
     }
 
+    
+    static func makeContainerPreview(container: ModelContainer) -> some View {
+        let context = ModelContext(container)
+        
+        Anime.getMockData(count: 20).forEach { item in
+            context.insert(item)
+        }
+
+        return AnimeListView()
+            .modelContext(context)
+    }
+    
 }
 
 #Preview("Empty List") {
@@ -177,10 +195,7 @@ struct AnimeListView: View {
 #Preview("Some Data List") {
     let container = try! ModelContainer(for: Anime.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     
-    let anime = Anime(data: JikanModel.getMockData()!)
-        
-    container.mainContext.insert(anime)
-    
-    return AnimeListView()
-        .modelContainer(container)
+    return AnimeListView.makeContainerPreview(container: container)
 }
+
+

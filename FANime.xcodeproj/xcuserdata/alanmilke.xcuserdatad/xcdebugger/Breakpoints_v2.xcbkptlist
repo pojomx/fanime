@@ -23,17 +23,47 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "F48254E2-8F3D-46BF-902C-203F3787D489"
+            uuid = "A4EF5568-1606-4F80-9131-7510D49B2544"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FANime/JikanService/JikanService.swift"
+            filePath = "FANime/Model/AnimeDataModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "67"
-            endingLineNumber = "67"
-            landmarkName = "getSeasonNow(page:)"
+            startingLineNumber = "147"
+            endingLineNumber = "147"
+            landmarkName = "getMockData(count:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "A4EF5568-1606-4F80-9131-7510D49B2544 - 9f732a9001192a17"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FANime.Anime.getMockData(count: Swift.Int) -&gt; Swift.Array&lt;FANime.Anime&gt;"
+                  moduleName = "FANime.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/alanmilke/Documents/dev/FANime/FANime/Model/AnimeDataModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "143"
+                  endingLineNumber = "143">
+               </Location>
+               <Location
+                  uuid = "A4EF5568-1606-4F80-9131-7510D49B2544 - 9f732a90011929ab"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FANime.Anime.getMockData(count: Swift.Int) -&gt; Swift.Array&lt;FANime.Anime&gt;"
+                  moduleName = "FANime.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/alanmilke/Documents/dev/FANime/FANime/Model/AnimeDataModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "147"
+                  endingLineNumber = "147">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

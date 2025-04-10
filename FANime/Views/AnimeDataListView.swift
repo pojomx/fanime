@@ -29,7 +29,7 @@ struct AnimeDataListView: View {
         NavigationStack {
             List {
                 ForEach(animes) { anime in
-                    Text("\(anime.titulo ?? "")")
+                    Text("\(anime.titulo)")
                         .swipeActions {
                             Button("Delete", role: .destructive) {
                                 modelContext.delete(anime)

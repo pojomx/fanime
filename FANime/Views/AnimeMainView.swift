@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AnimeMainView: View {
     var body: some View {
@@ -24,8 +25,28 @@ struct AnimeMainView: View {
                 }
         }
     }
+    
+    
+    static func makeContainerPreview(container: ModelContainer) -> some View {
+        let context = ModelContext(container)
+        
+        Anime.getMockData(count: 20).forEach { item in
+            context.insert(item)
+        }
+
+        return AnimeMainView()
+            .modelContext(context)
+    }
 }
 
-#Preview {
+#Preview("Empy Model") {
     AnimeMainView()
+    
 }
+
+#Preview("Some Data") {
+    let container = try! ModelContainer(for: Anime.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    
+    return AnimeMainView.makeContainerPreview(container: container)
+}
+

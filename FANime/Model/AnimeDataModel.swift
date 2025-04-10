@@ -43,9 +43,10 @@ final class Anime {
     var mal_link: String?
     var portada: String?
     var portada_thumb: String?
-    var titulo: String?
-    var titulo_en: String?
+    var titulo: String
+    var titulos: [JikanTitle]
     var type: String?
+    var source: String?
     var episodes: Int?
     var status: String?
     var airing: Bool
@@ -55,6 +56,7 @@ final class Anime {
     var background: String?
     var season: String?
     var year: Int?
+    var rating: String?
     var genres: [AnimeGenre]
     var broadcast: JikanBroadcast?
     var broadcastDay: Anime.BroadcastDays {
@@ -78,9 +80,10 @@ final class Anime {
         mal_link = data.url
         portada = data.images?.jpg.large_image_url
         portada_thumb = data.images?.jpg.small_image_url
-        titulo = data.title
-        titulo_en = data.title_english
+        titulo = data.titles?.first(where: { $0.type == "English" })?.title ?? data.titles?.first(where: { $0.type == "Default" })?.title ?? "N/A"
+        titulos = data.titles ?? []
         type = data.type
+        source = data.source
         episodes = data.episodes
         status = data.status
         airing = data.airing
@@ -90,7 +93,7 @@ final class Anime {
         background = data.background
         season = data.season
         year = data.year
-        
+        rating = data.rating
         broadcast = data.broadcast
         genres = AnimeGenre.fromJikanCommon(data: data.genres)
     }
@@ -101,8 +104,9 @@ final class Anime {
         portada = data.portada
         portada_thumb = data.portada_thumb
         titulo = data.titulo
-        titulo_en = data.titulo_en
+        titulos = data.titulos
         type = data.type
+        source = data.source
         episodes = data.episodes
         status = data.status
         airing = data.airing
@@ -112,9 +116,47 @@ final class Anime {
         background = data.background
         season = data.season
         year = data.year
-        
+        rating = data.rating
         broadcast = data.broadcast
         genres = data.genres
+    }
+    
+    static func getMockData(count: Int = 4) -> [Anime] {
+        
+        let animeList = JikanModel.getMockListData().map { Anime(data: $0) }
+        
+            let anime1 = animeList[0]
+            let anime2 = animeList[1]
+            let anime3 = animeList[2]
+            let anime4 = animeList[3]
+            
+            anime2.favorite = true
+            anime2.favorite_date = Date()
+            
+            anime3.delete = true
+            anime3.delete_date = Date()
+            
+            
+            anime4.favorite = true
+            anime4.favorite_date = Date()
+            anime4.delete = true
+            anime4.delete_date = Date()
+        
+        var lista = [anime1, anime2, anime3, anime4]
+        
+        if lista.count < count {
+            let maxCount = animeList.count < count ? animeList.count : count
+            for i in 4..<maxCount {
+                let newAnime = animeList[i]
+                
+                newAnime.favorite = Bool.random()
+                newAnime.delete = Bool.random()
+                
+                lista.append(newAnime)
+            }
+        }
+        
+        return lista
     }
     
     enum Tipos : String, CaseIterable {
@@ -130,13 +172,13 @@ final class Anime {
     }
     
     enum BroadcastDays: String, CaseIterable {
-        case sunday = "Sundays"
         case monday = "Mondays"
         case tuesday = "Tuesdays"
         case wednesday = "Wednesdays"
         case thursday = "Thursdays"
         case friday = "Fridays"
         case saturday = "Saturdays"
+        case sunday = "Sundays"
         case na = "N/A" //Other
     }
 }

@@ -28,14 +28,12 @@ struct AnimeRowView: View {
             }.frame(maxWidth: 54)
             VStack (alignment: .leading) {
                 
-                Text(anime.titulo_en ?? anime.titulo ?? "")
+                Text(anime.titulo)
                     .font(.headline)
                     .fontWeight(.bold)
-                
-                if let titulo = anime.titulo {
-                    Text(titulo)
+               
+                Text(anime.titulos.first(where: { $0.type == "Default" })?.title ?? "")
                         .font(.footnote)
-                }
                 
                 HStack {
                     if anime.favorite {
@@ -83,27 +81,11 @@ struct AnimeRowView: View {
 }
 
 #Preview {
-    var anime = Anime(data: JikanModel.getMockData()!)
-    anime.delete = true
-    anime.titulo_en = "Anime Eliminado"
-
-    var anime2 = Anime(data: JikanModel.getMockData()!)
-    anime2.favorite = true
-    anime2.titulo_en = "Anime Favorito"
+    let animeList = Anime.getMockData()
     
-    var anime3 = Anime(data: JikanModel.getMockData()!)
-    anime3.titulo_en = "Anime Normal"
-    
-    var anime4 = Anime(data: JikanModel.getMockData()!)
-    anime4.delete = true
-    anime4.favorite = true
-    anime4.titulo_en = "Anime Favorito Eliminado"
-
-    return
     List {
-        AnimeRowView(anime: anime3)
-        AnimeRowView(anime: anime)
-        AnimeRowView(anime: anime2)
-        AnimeRowView(anime: anime4)
+        ForEach(animeList, id: \.mal_id) { anime in
+            AnimeRowView(anime: anime)
+        }
     }
 }

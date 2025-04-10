@@ -86,11 +86,11 @@ struct AnimeFavoriteListView: View {
     static func makeContainerPreview(container: ModelContainer) -> some View {
         let context = ModelContext(container)
         
-        Anime.getMockData().forEach { item in
+        Anime.getMockData(count: 10).forEach { item in
             context.insert(item)
         }
 
-        return AnimeListView()
+        return AnimeFavoriteListView()
             .modelContext(context)
     }
 }

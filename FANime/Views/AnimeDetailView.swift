@@ -18,7 +18,17 @@ struct AnimeDetailView: View {
                     VStack{
                         ZStack (alignment: .topTrailing) {
                             
-                            Image(systemName: "square.and.arrow.up")
+                            VStack {
+                                Link(destination: URL(string: anime.mal_link ?? "")!) {
+                                    Image(systemName: "square.and.arrow.up")
+                                        .padding(.vertical)
+                                }
+                                
+                                Link(destination: URL(string: anime.mal_link ?? "")!) {
+                                    Image(systemName: "link")
+                                        .padding(.vertical)
+                                }
+                            }
                             
                             HStack {
                                 Spacer()
@@ -27,6 +37,7 @@ struct AnimeDetailView: View {
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width: 200)
+                                        .padding(.vertical)
                                         
                                 } placeholder: {
                                     ProgressView()
@@ -34,8 +45,14 @@ struct AnimeDetailView: View {
                                 Spacer()
                             }
                         }
-                        Text(anime.titulo ?? "No title")
+                        Text(anime.titulo)
                             .font(.title)
+                        
+                        ForEach(anime.titulos, id: \.type) { titulo in
+                            Text(titulo.title)
+                                .font(.caption)
+                        }
+                        
                         HStack {
                             ForEach(anime.genres) { genre in
                                 Text(genre.name)
@@ -56,19 +73,52 @@ struct AnimeDetailView: View {
                 }
                 
                 Section(header: Text("Information")) {
+                    CustomListRowView(rowContent: "\(anime.type ?? "")",
+                                      rowLabel: "Type",
+                                      rowIcon: "circle",
+                                      rowTintColor: .blue)
                     
+                    CustomListRowView(rowContent: "\(anime.rating == nil ? "" : anime.rating!)",
+                                      rowLabel: "Rating",
+                                      rowIcon: "circle",
+                                      rowTintColor: .blue)
+                    
+                    
+                    CustomListRowView(rowContent: "\(anime.season ?? "") \(anime.year == nil ? "" : String(anime.year!))",
+                                      rowLabel: "Season",
+                                      rowIcon: "circle",
+                                      rowTintColor: .blue)
+                    
+                    CustomListRowView(rowContent: "\(anime.source ?? "")",
+                                      rowLabel: "Source",
+                                      rowIcon: "circle",
+                                      rowTintColor: .blue)
+
+                    CustomListRowView(rowContent: "\(anime.status ?? "")",
+                                      rowLabel: "Status",
+                                      rowIcon: "calendar",
+                                      rowTintColor: .blue)
+
+                    CustomListRowView(rowContent: "\(anime.broadcast?.string?.replacingOccurrences(of: ": ", with: ":") ?? "No information")",
+                                      rowContent2: "\(anime.broadcast?.timezone ?? ""): \(TimeZone(identifier: "Asia/Tokyo")!.secondsFromGMT()/60/60)h",
+                                      rowLabel: "Days",
+                                      rowIcon: "calendar",
+                                      rowTintColor: .blue)
+                    
+                    CustomListRowView(rowContent: "\(anime.broadcast?.timezone ?? ""): \(TimeZone(identifier: "Asia/Tokyo")!.secondsFromGMT()/60/60)h",
+                                      rowContent2: "(\(TimeZone.current.secondsFromGMT()/60/60 - TimeZone(identifier: "Asia/Tokyo")!.secondsFromGMT()/60/60)h)",
+                                      rowLabel: "TimeZone",
+                                      rowIcon: "clock",
+                                      rowTintColor: .blue)
                 }
                 
-                Section(header: Text("Sinopsis")) {
+                Section(header: Text("Synopsis")) {
                     Text(anime.synopsis ?? "No synopsis")
                         .font(.callout)
                         .padding(.vertical)
                 }
                 
             }
-        
-            Link("Ver en MAL", destination: URL(string: anime.mal_link ?? "")!)
-            Spacer()
         }
     }
 }
