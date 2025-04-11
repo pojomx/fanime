@@ -54,6 +54,19 @@ struct AnimeDetailView: View {
                         }
                         
                         HStack {
+                            ForEach(anime.demographics, id:\.mal_id) { demographic in
+                                Text(demographic.name)
+                                    .font(.footnote)
+                                    .padding(2)
+                                    .padding(.horizontal, 4)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.red)
+                                            .shadow(radius: 5)
+                                    )
+                                    .foregroundColor(.white)
+                            }
+                            
                             ForEach(anime.genres) { genre in
                                 Text(genre.name)
                                     .font(.footnote)
@@ -67,6 +80,7 @@ struct AnimeDetailView: View {
                                     )
                                     .foregroundColor(.white)
                             }
+                            
                         }
                         .padding(10)
                     }
@@ -99,14 +113,14 @@ struct AnimeDetailView: View {
                                       rowIcon: "calendar",
                                       rowTintColor: .blue)
 
-                    CustomListRowView(rowContent: "\(anime.broadcast?.string?.replacingOccurrences(of: ": ", with: ":") ?? "No information")",
-                                      rowContent2: "\(anime.broadcast?.timezone ?? ""): \(TimeZone(identifier: "Asia/Tokyo")!.secondsFromGMT()/60/60)h",
+                    CustomListRowView(rowContent: "\(anime.broadcast?.day ?? "No information")",
+                                      rowContent2: "\(anime.broadcast?.string ?? "")",
                                       rowLabel: "Days",
                                       rowIcon: "calendar",
                                       rowTintColor: .blue)
                     
-                    CustomListRowView(rowContent: "\(anime.broadcast?.timezone ?? ""): \(TimeZone(identifier: "Asia/Tokyo")!.secondsFromGMT()/60/60)h",
-                                      rowContent2: "(\(TimeZone.current.secondsFromGMT()/60/60 - TimeZone(identifier: "Asia/Tokyo")!.secondsFromGMT()/60/60)h)",
+                    CustomListRowView(rowContent: "\(Anime.calculateBroadcastDate(aired: anime.aired, broadcast: anime.broadcast) ?? "")",
+                                      rowContent2: "\(TimeZone.current.identifier) (\(TimeZone.current.abbreviation()!))",
                                       rowLabel: "TimeZone",
                                       rowIcon: "clock",
                                       rowTintColor: .blue)

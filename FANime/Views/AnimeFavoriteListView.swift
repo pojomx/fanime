@@ -19,7 +19,8 @@ struct AnimeFavoriteListView: View {
            ]) private var animes: [Anime] = []
     
     var grouped: [String: [Anime]] {
-        Dictionary(grouping: animes) { $0.broadcast?.day ?? "N/A" }
+        //Dictionary(grouping: animes) { $0.broadcast?.day ?? "N/A" }
+        Dictionary(grouping: animes) { $0.broadcast_local?.day ?? $0.broadcast?.day ?? "N/A" }
     }
     
     var body: some View {

@@ -58,7 +58,9 @@ final class Anime {
     var year: Int?
     var rating: String?
     var genres: [AnimeGenre]
+    var demographics: [JikanCommon]
     var broadcast: JikanBroadcast?
+    var broadcast_local: JikanBroadcast?
     var broadcastDay: Anime.BroadcastDays {
         if let broadcast = broadcast {
             return broadcast.getDayEnum()
@@ -95,7 +97,9 @@ final class Anime {
         year = data.year
         rating = data.rating
         broadcast = data.broadcast
+        broadcast_local = Anime.calculateBroadcastLocal(aired: data.aired, broadcast: data.broadcast)
         genres = AnimeGenre.fromJikanCommon(data: data.genres)
+        demographics = data.demographics ?? []
     }
     
     func updateValues(data: Anime) {
@@ -118,7 +122,50 @@ final class Anime {
         year = data.year
         rating = data.rating
         broadcast = data.broadcast
+        broadcast_local = data.broadcast_local
         genres = data.genres
+        demographics = data.demographics
+    }
+    
+    static func calculateBroadcastLocal(aired: JikanAired?, broadcast: JikanBroadcast?) -> JikanBroadcast? {
+        guard let local = calculateBroadcastDate(aired: aired, broadcast: broadcast) else { return nil }
+        let local_split = local.split(separator: ", ");
+        
+        let local_day = String(local_split[0])
+        let local_time = String(local_split[1])
+        
+        let jikanLocal = JikanBroadcast(day: "\(local_day)s", time: local_time, timezone: TimeZone.current.identifier, string: "\(local_day)s at \(local_time) (\(TimeZone.current.abbreviation()!))")
+        return jikanLocal
+    }
+    
+    static func calculateBroadcastDate(aired: JikanAired?, broadcast: JikanBroadcast?) -> String? {
+        let dateFormatString = "yyyy-MM-dd HH:mm"
+        let finalFormatString = "EEEE, HH:mm"
+        
+        //Get DATE part of the episode...
+        guard let aired = aired?.from else { return nil } //No Aired information
+        
+        //We have now the DATE on this format: 2025-04-05T00: 00: 00+00: 00
+        let date_part = aired.split(separator: "T")[0]
+        
+        //Next, we need the TIME part
+        let time_part = broadcast?.time ?? "00:00"
+
+        //Next we add the TimeZone Part
+        guard let timezone = TimeZone(identifier: broadcast?.timezone ?? "Asia/Tokyo" ) else { return nil }
+                
+        let dateString = "\(date_part) \(time_part)"
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = dateFormatString
+        formatter.timeZone = timezone
+
+        guard let broadcastDate = formatter.date(from: dateString) else { return nil }
+        
+        formatter.dateFormat = finalFormatString
+        formatter.timeZone = TimeZone.current
+
+        return formatter.string(from: broadcastDate)
     }
     
     static func getMockData(count: Int = 4) -> [Anime] {

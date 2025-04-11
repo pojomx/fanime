@@ -45,6 +45,11 @@ struct AnimeRowView: View {
                             .foregroundColor(.red)
                         
                     }
+                    ForEach(anime.demographics, id: \.mal_id) { demo in
+                        Text(demo.name)
+                            .font(.caption2)
+                    }
+                    
                     ForEach(anime.genres) { genre in
                         Text(genre.name)
                             .font(.caption)
@@ -59,9 +64,9 @@ struct AnimeRowView: View {
                     Text("[\(anime.type ?? "N/A")]")
                         .font(.custom("", size: 8))
                     
-                    Text("\(String(describing: anime.broadcast?.day ?? ""))")
+                    Text("\(String(describing: anime.broadcast_local?.day ?? ""))")
                         .font(.caption)
-                    
+                
                     if let year = anime.year {
                         Text("\(anime.season ?? "") \(String(year))")
                             .font(.caption)
