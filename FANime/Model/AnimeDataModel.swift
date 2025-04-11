@@ -76,7 +76,7 @@ final class Anime {
     var delete_date: Date? = nil
     
     //MARK: - Methods
-    init(data: JikanData)
+    init(data: JikanAnime)
     {
         mal_id = data.mal_id
         mal_link = data.url

@@ -19,7 +19,7 @@ class JikanService: ObservableObject {
     static let shared = JikanService()
     private let baseURL = "https://api.jikan.moe/v4"
     
-    @Published var anime: [JikanData] = []
+    @Published var anime: [JikanAnime] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isComplete: Bool = false
