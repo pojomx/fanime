@@ -13,9 +13,9 @@ struct AnimeListView: View {
     
     @Environment(\.modelContext) private var modelContext
     
-    @Query(sort: [
-        SortDescriptor(\Anime.titulo)
-    ]) private var animes: [Anime] = []
+    let year = 2025
+    
+    @State private var animes: [Anime] = []
     
     var grouped: [String: [Anime]] {
         Dictionary(grouping: animes) { $0.type ?? "N/A" }
@@ -60,6 +60,9 @@ struct AnimeListView: View {
                         Text("fall")
                             .font(.caption2)
                             .foregroundStyle(querySeason == .fall ? .primary : .secondary)
+                        Text("others")
+                            .font(.caption2)
+                            .foregroundStyle(querySeason == .na ? .primary : .secondary)
                     }
                     
                 }
@@ -156,8 +159,45 @@ struct AnimeListView: View {
         .onAppear() {
             print("onAppear")
         }
-    
+        .onChange(of: querySeason, { oldValue, newValue in
+            updateData()
+        })
+        
     } //:BODY
+    
+    
+    private func updateData() {
+        if querySeason == .na {
+            updateData2()
+        } else {
+            updateData1()
+        }
+    }
+    
+    private func updateData1() {
+        let season = "\(String(self.queryYear))\(querySeason.rawValue)" // 2025spring - 2025na - 0na
+        
+        let descriptor = FetchDescriptor<Anime>(
+            predicate: #Predicate { anime in anime.yearseason == season },
+            sortBy: [SortDescriptor(\.titulo)])
+        do {
+            animes = try modelContext.fetch(descriptor)
+        } catch {
+            print("error: \(error)")
+        }
+    }
+    
+    private func updateData2() {
+        let season = querySeason.rawValue
+        let descriptor = FetchDescriptor<Anime>(
+            predicate: #Predicate { anime in anime.aired?.prop?.from?.year ?? 0 == queryYear },
+            sortBy: [SortDescriptor(\.titulo)])
+        do {
+            animes = try modelContext.fetch(descriptor)
+        } catch {
+            print("error: \(error)")
+        }
+    }
     
     private func fetchData() {
         self.isLoading = true
@@ -190,6 +230,7 @@ struct AnimeListView: View {
                         self.isLoading = false
                         self.currentPage = 1
                         self.hasNextPage = false
+                        updateData()
                     }
                     
                 })
@@ -228,6 +269,7 @@ struct AnimeListView: View {
                         self.isLoading = false
                         self.currentPage = 1
                         self.hasNextPage = false
+                        updateData()
                     }
                     
                 })

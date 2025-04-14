@@ -75,8 +75,17 @@ struct SettingsView: View {
                     }
                     Spacer()
                 }
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        reviewDataIntegrity()
+                    }) {
+                        Text("Verify Integrity of Data")
+                    }
+                    Spacer()
+                }
             } header: {
-                Text("Backup & Restore")
+                Text("Backup & Restore & Integrity")
             }
             
             // MARK: - Section About
@@ -124,6 +133,10 @@ struct SettingsView: View {
     }
     
     func backupData() {
+        
+    }
+    
+    func reviewDataIntegrity() {
         
     }
 }

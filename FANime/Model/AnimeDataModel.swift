@@ -22,6 +22,7 @@ enum AnimeSeason: String {
     case spring = "spring" // Abril, Mayo, Junio
     case summer = "summer" // Julio, Agosto, Septiembre
     case fall = "fall" //Octubre, Noviembre, Diciembre
+    case na = "na" // Otros sin temporada...
 }
 
 @Model
@@ -42,6 +43,7 @@ final class Anime {
     var duration: String?
     var synopsis: String?
     var background: String?
+    var yearseason: String = ""// yyyyseason -> 2025spring
     var season: String?
     var year: Int?
     var rating: String?
@@ -89,6 +91,10 @@ final class Anime {
         broadcast_local = Anime.calculateBroadcastLocal(aired: data.aired, broadcast: data.broadcast)
         genres = AnimeGenre.fromJikanCommon(data: data.genres)
         demographics = data.demographics ?? []
+        
+        // Valores Persistentes Calculados
+        //yearseason = "\(data.year ?? data.aired?.prop?.from?.year ?? 0)\(data.season ?? Anime.calculateSeason(month: data.aired?.prop?.from?.month ?? 0).rawValue)"
+        recalculatePersistentValues()
     }
     
     func updateValues(data: Anime) {
@@ -114,6 +120,13 @@ final class Anime {
         broadcast_local = data.broadcast_local
         genres = data.genres
         demographics = data.demographics
+        
+        //Valores Persistentes Calculados
+        recalculatePersistentValues()
+    }
+    
+    func recalculatePersistentValues() {
+        yearseason = "\(year ?? aired?.prop?.from?.year ?? 0)\(season ?? Anime.calculateSeason(month: aired?.prop?.from?.month ?? 0).rawValue)"
     }
     
     func getBackupData() -> AnimeBackupData {
@@ -241,6 +254,8 @@ extension Anime {
         case .summer:
             return (year, .fall)
         case .fall:
+            return (year, .na)
+        case .na:
             return (year + 1, .winter)
         }
     }
@@ -248,16 +263,30 @@ extension Anime {
     static func getPreviousSeason(year: Int, season: AnimeSeason) -> (Int, AnimeSeason) {
         switch season {
         case .winter:
-            return (year - 1, .fall)
+            return (year - 1, .na)
         case .spring:
             return (year, .winter)
         case .summer:
             return (year, .spring)
         case .fall:
             return (year, .summer)
+        case .na:
+            return (year, .fall)
         }
     }
     
+    static func calculateSeason(month: Int) -> AnimeSeason {
+        switch month {
+        case 3, 1, 2:
+            return .winter
+        case 6, 4, 5:
+            return .spring
+        case 9, 7, 8:
+            return .summer
+        default:
+            return .fall
+        }
+    }
 }
 
 extension Anime {
