@@ -85,7 +85,7 @@ struct AnimeDetailView: View {
                         .padding(10)
                     }
                 }
-                
+                                
                 Section(header: Text("Information")) {
                     CustomListRowView(rowContent: "\(anime.type ?? "")",
                                       rowLabel: "Type",
@@ -112,16 +112,18 @@ struct AnimeDetailView: View {
                                       rowLabel: "Status",
                                       rowIcon: "calendar",
                                       rowTintColor: .blue)
-
+                }
+                
+                Section(header: Text("Broadcast")) {
                     CustomListRowView(rowContent: "\(anime.broadcast?.day ?? "No information")",
                                       rowContent2: "\(anime.broadcast?.string ?? "")",
-                                      rowLabel: "Days",
+                                      rowLabel: "Asia/Tokyo",
                                       rowIcon: "calendar",
                                       rowTintColor: .blue)
                     
                     CustomListRowView(rowContent: "\(Anime.calculateBroadcastDate(aired: anime.aired, broadcast: anime.broadcast) ?? "")",
                                       rowContent2: "\(TimeZone.current.identifier) (\(TimeZone.current.abbreviation()!))",
-                                      rowLabel: "TimeZone",
+                                      rowLabel: "Local",
                                       rowIcon: "clock",
                                       rowTintColor: .blue)
                 }

@@ -14,26 +14,65 @@ struct AnimeListView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query(sort: [
-        SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
+        SortDescriptor(\Anime.titulo)
     ]) private var animes: [Anime] = []
     
     var grouped: [String: [Anime]] {
         Dictionary(grouping: animes) { $0.type ?? "N/A" }
     }
     
-    @State private var errorMessage: String = ""
+    //Info about current service...
+    @State private var queryYear: Int = 2025
+    @State private var querySeason: AnimeSeason = .spring
     
+    //Info about display data
+    @State private var errorMessage: String = ""
     @State private var isLoading: Bool = false
     @State private var hasNextPage: Bool = false
     @State private var currentPage: Int = 1
     
+    //Other Combine Stuff
     @State private var observers: Set<AnyCancellable> = []
     
     var body: some View {
         let tipos = Anime.Tipos.allCases.map(\.rawValue)
-        NavigationView {
+        NavigationStack {
+            HStack {
+                Button {
+                    (queryYear, querySeason) = Anime.getPreviousSeason(year: queryYear, season: querySeason)
+                } label: {
+                    Text(" < prev")
+                }
+                Spacer()
+                VStack {
+                    Text(String(queryYear))
+                        .font(.caption)
+                    HStack {
+                        Text("winter")
+                            .font(.caption2)
+                            .foregroundStyle(querySeason == .winter ? .primary : .secondary)
+                        Text("spring")
+                            .font(.caption2)
+                            .foregroundStyle(querySeason == .spring ? .primary : .secondary)
+                        Text("summer")
+                            .font(.caption2)
+                            .foregroundStyle(querySeason == .summer ? .primary : .secondary)
+                        Text("fall")
+                            .font(.caption2)
+                            .foregroundStyle(querySeason == .fall ? .primary : .secondary)
+                    }
+                    
+                }
+                Spacer()
+                Button {
+                    (queryYear, querySeason) = Anime.getNextSeason(year: queryYear, season: querySeason)
+                } label: {
+                    Text("next >")
+                }
+            }
             List {
                 ForEach(tipos, id: \.self) { type in
+                    
                     let countedAnime = grouped[type]?.count ?? 0
                     if countedAnime > 0 {
                         Section(header: Text(type), footer: HStack {
@@ -64,39 +103,33 @@ struct AnimeListView: View {
                                                     Label("Agregar a favoritos", systemImage: "star.fill")
                                                         .tint(.yellow)
                                                 }
-                                                
-                                                
                                             }
                                         }
-                                }
+                                } //.NAVLINK
                                 .listRowBackground(
                                     anime.delete ? Color.red.opacity(0.2) :
                                         anime.favorite ? Color.yellow.opacity(0.2) : Color.clear)
-                            }
-                        }
-                    }
-                }
-            }
+                                
+                            } //.FOREACH anime agrupado por tipo
+                        } //.SECTION
+                    } //.IF counted anime
+                } //.FOREACH-Tipos
+            } //.LIST
             .overlay {
                 if isLoading {
-                    ZStack {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.9))
-                            .frame(width: 500, height: 1000)
-                        ContentUnavailableView("Content is loading", systemImage: "heart.circle", description: Text("We are downloading content..."))
-                    }
-                    
+                    CustomContentUnavailableView(
+                        icon: "icloud.and.arrow.down",
+                        title: "Downloading",
+                        description: "The application is downloading content...")
                 } else {
                     if animes.isEmpty {
-                        
-                        ZStack {
-                            ContentUnavailableView("No Anime", systemImage: "heart.circle", description: Text("No anime has been downloaded"))
-                        }
+                        CustomContentUnavailableView(
+                            icon: "play.slash",
+                            title: "No Anime",
+                            description: "There is no anime to show.")
                     }
                 }
-                
-            }
-            .navigationTitle("Temporada")
+            } //.LIST Overlay
             .toolbar {
                 ToolbarItem {
                     if self.isLoading {
@@ -107,13 +140,24 @@ struct AnimeListView: View {
                         }
                     }
                 }
+                
+                ToolbarItem {
+                    if self.isLoading {
+                        ProgressView()
+                    } else {
+                        Button(action: fetchDataSeason){
+                            Label("Add Item", systemImage: "arrow.clockwise.circle")
+                        }
+                    }
+                }
             }
-        }
+        } //.NAVSTACK
+        .navigationTitle("Spring 2025") // Posiblemente sobre la lista
         .onAppear() {
             print("onAppear")
         }
     
-    }
+    } //:BODY
     
     private func fetchData() {
         self.isLoading = true
@@ -151,6 +195,43 @@ struct AnimeListView: View {
                 })
             .store(in: &observers)
         
+    }
+    
+    private func fetchDataSeason() {
+        self.isLoading = true
+        JikanService.shared.getSeason(year: queryYear, season: querySeason, page: self.currentPage)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { result in
+                        switch result {
+                        case .failure(let error):
+                            errorMessage = error.localizedDescription
+                            break
+                        case .finished:
+                            print("Finished fetching data")
+                        }
+                },
+                receiveValue: { jikanModel in
+                    jikanModel.data.forEach { animeData in
+                        addAnime(anime: Anime(data:animeData), context: modelContext)
+                    }
+                    
+                    if (jikanModel.pagination?.has_next_page ?? false) {
+                        self.hasNextPage = true
+                        self.currentPage += 1
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            //Get next Part in 2 seconds...
+                            self.fetchDataSeason()
+                        }
+                    } else {
+                        self.isLoading = false
+                        self.currentPage = 1
+                        self.hasNextPage = false
+                    }
+                    
+                })
+            .store(in: &observers)
     }
     
     func addAnime(anime: Anime, context: ModelContext) {

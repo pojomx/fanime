@@ -38,6 +38,4 @@ final class Season {
         self.id = data.id
         self.seasons = data.seasons
     }
-    
-    
 }

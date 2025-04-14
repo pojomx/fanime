@@ -71,10 +71,10 @@ struct AnimeFavoriteListView: View {
             }
             .overlay {
                 if animes.isEmpty {
-                    ZStack {
-                        ContentUnavailableView("No Anime", systemImage: "star.circle", description: Text("No anime has been favorited yet."))
-                            .tint(.yellow)
-                    }
+                    CustomContentUnavailableView(
+                        icon: "star.slash.fill",
+                        title: "No Anime",
+                        description: "There is no anime marked as favorite.")
                 }
             }
             .navigationTitle("Favoritos")

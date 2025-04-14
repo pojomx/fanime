@@ -21,32 +21,20 @@ struct AnimeMainView: View {
                 .tabItem {
                     Image(systemName: "list.clipboard")
                         .foregroundColor(.orange)
-                    Text("Temporada")
+                    Text("Season")
+                }
+            SettingsView()
+                .tabItem {
+                    Image(systemName: "gear")
+                        .foregroundColor(.orange)
+                    Text("Settings")
                 }
         }
     }
-    
-    
-    static func makeContainerPreview(container: ModelContainer) -> some View {
-        let context = ModelContext(container)
-        
-        Anime.getMockData(count: 20).forEach { item in
-            context.insert(item)
-        }
-
-        return AnimeMainView()
-            .modelContext(context)
-    }
-}
-
-#Preview("Empy Model") {
-    AnimeMainView()
-    
 }
 
 #Preview("Some Data") {
-    let container = try! ModelContainer(for: Anime.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    
-    return AnimeMainView.makeContainerPreview(container: container)
+    AnimeMainView()
+        .modelContainer(Anime.preview)
 }
 

@@ -8,36 +8,24 @@
 import Foundation
 import SwiftData
 
-@Model
-final class AnimeGenre {
-    var id: Int
-    var type: String
-    var name: String
-    var url: String
-    
-    init (data: JikanCommon) {
-        id = data.mal_id
-        type = data.type
-        name = data.name
-        url = data.url
-    }
-    
-    init(mal_id: Int, type: String, name: String, url: String) {
-        self.id = mal_id
-        self.type = type //Anime
-        self.name = name //Action, SciFi, Fantasy
-        self.url = url
-    }
-    
-    static func fromJikanCommon(data: [JikanCommon]?) -> [AnimeGenre] {
-        guard let data else { return [] }
-        return data.map { AnimeGenre(data: $0) }
-    }
+struct AnimeBackupData: Decodable, Encodable {
+    let mal_id: Int
+    let favorite: Bool
+    let favorite_number: Int?
+    let favorite_date: Date?
+    let delete: Bool
+    let delete_date: Date?
+}
+
+enum AnimeSeason: String {
+    case winter = "winter" // Enero, Febrero, Marzo
+    case spring = "spring" // Abril, Mayo, Junio
+    case summer = "summer" // Julio, Agosto, Septiembre
+    case fall = "fall" //Octubre, Noviembre, Diciembre
 }
 
 @Model
 final class Anime {
-    
     //MARK: - Jikan Information
     var mal_id: Int //mal_id
     var mal_link: String?
@@ -71,6 +59,7 @@ final class Anime {
     
     //MARK: - Own Information
     var favorite: Bool = false
+    var favorite_number: Int? = nil
     var favorite_date: Date? = nil
     var delete: Bool = false
     var delete_date: Date? = nil
@@ -125,6 +114,17 @@ final class Anime {
         broadcast_local = data.broadcast_local
         genres = data.genres
         demographics = data.demographics
+    }
+    
+    func getBackupData() -> AnimeBackupData {
+        return AnimeBackupData(
+            mal_id: self.mal_id,
+            favorite: self.favorite,
+            favorite_number: self.favorite_number,
+            favorite_date: self.favorite_date,
+            delete: self.delete,
+            delete_date: self.delete_date
+        )
     }
     
     static func calculateBroadcastLocal(aired: JikanAired?, broadcast: JikanBroadcast?) -> JikanBroadcast? {
@@ -227,5 +227,50 @@ final class Anime {
         case saturday = "Saturdays"
         case sunday = "Sundays"
         case na = "N/A" //Other
+    }
+}
+
+extension Anime {
+    
+    static func getNextSeason(year: Int, season: AnimeSeason) -> (Int, AnimeSeason) {
+        switch season {
+        case .winter:
+            return (year, .spring)
+        case .spring:
+            return (year, .summer)
+        case .summer:
+            return (year, .fall)
+        case .fall:
+            return (year + 1, .winter)
+        }
+    }
+    
+    static func getPreviousSeason(year: Int, season: AnimeSeason) -> (Int, AnimeSeason) {
+        switch season {
+        case .winter:
+            return (year - 1, .fall)
+        case .spring:
+            return (year, .winter)
+        case .summer:
+            return (year, .spring)
+        case .fall:
+            return (year, .summer)
+        }
+    }
+    
+}
+
+extension Anime {
+    @MainActor
+    static var preview: ModelContainer {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: Anime.self, configurations: configuration)
+        
+        //Insert Data...
+        Anime.getMockData(count: 25).forEach { item in
+            container.mainContext.insert(item)
+        }
+        
+        return container
     }
 }
