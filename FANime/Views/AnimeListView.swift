@@ -138,26 +138,21 @@ struct AnimeListView: View {
                     if self.isLoading {
                         ProgressView()
                     } else {
-                        Button(action: fetchData) {
-                            Label("Add Item", systemImage: "arrow.clockwise")
-                        }
-                    }
-                }
-                
-                ToolbarItem {
-                    if self.isLoading {
-                        ProgressView()
-                    } else {
                         Button(action: fetchDataSeason){
-                            Label("Add Item", systemImage: "arrow.clockwise.circle")
+                            Label("Add Item", systemImage: "arrow.clockwise")
+                                
                         }
+                        .disabled(querySeason == .na)
                     }
                 }
             }
         } //.NAVSTACK
         .navigationTitle("Spring 2025") // Posiblemente sobre la lista
         .onAppear() {
-            print("onAppear")
+            let date = Date()
+            self.queryYear = date.getYear() 
+            self.querySeason = Anime.calculateSeason(month: date.getMonth())
+            updateData()
         }
         .onChange(of: querySeason, { oldValue, newValue in
             updateData()
@@ -165,6 +160,9 @@ struct AnimeListView: View {
         
     } //:BODY
     
+    private func doNothing() {
+        
+    }
     
     private func updateData() {
         if querySeason == .na {
@@ -175,10 +173,10 @@ struct AnimeListView: View {
     }
     
     private func updateData1() {
-        let season = "\(String(self.queryYear))\(querySeason.rawValue)" // 2025spring - 2025na - 0na
+        let season = "\(querySeason.rawValue)" // 2025spring - 2025na - 0na
         
         let descriptor = FetchDescriptor<Anime>(
-            predicate: #Predicate { anime in anime.yearseason == season },
+            predicate: #Predicate { anime in anime.cSeason == season && anime.cYear == queryYear },
             sortBy: [SortDescriptor(\.titulo)])
         do {
             animes = try modelContext.fetch(descriptor)
@@ -188,9 +186,10 @@ struct AnimeListView: View {
     }
     
     private func updateData2() {
-        let season = querySeason.rawValue
+       
+        
         let descriptor = FetchDescriptor<Anime>(
-            predicate: #Predicate { anime in anime.aired?.prop?.from?.year ?? 0 == queryYear },
+            predicate: #Predicate { anime in anime.cYear == queryYear }, // 2025...
             sortBy: [SortDescriptor(\.titulo)])
         do {
             animes = try modelContext.fetch(descriptor)
@@ -199,6 +198,7 @@ struct AnimeListView: View {
         }
     }
     
+    /*
     private func fetchData() {
         self.isLoading = true
         JikanService.shared.getSeasonNow(page: self.currentPage)
@@ -236,7 +236,7 @@ struct AnimeListView: View {
                 })
             .store(in: &observers)
         
-    }
+    }*/
     
     private func fetchDataSeason() {
         self.isLoading = true
@@ -254,7 +254,12 @@ struct AnimeListView: View {
                 },
                 receiveValue: { jikanModel in
                     jikanModel.data.forEach { animeData in
-                        addAnime(anime: Anime(data:animeData), context: modelContext)
+                        let anime = Anime(data:animeData)
+                        
+                        anime.cYear = queryYear
+                        anime.cSeason = querySeason.rawValue
+                        
+                        addAnime(anime: anime, context: modelContext)
                     }
                     
                     if (jikanModel.pagination?.has_next_page ?? false) {

@@ -24,7 +24,7 @@ struct AnimeFavoriteListView: View {
     }
     
     var body: some View {
-        
+        let groupDays = grouped.keys.sorted()
         let dias = Anime.BroadcastDays.allCases.map(\.rawValue)
         
         NavigationView {

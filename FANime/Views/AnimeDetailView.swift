@@ -38,7 +38,7 @@ struct AnimeDetailView: View {
                                         .scaledToFill()
                                         .frame(width: 200)
                                         .padding(.vertical)
-                                        
+                                    
                                 } placeholder: {
                                     ProgressView()
                                 }
@@ -70,7 +70,7 @@ struct AnimeDetailView: View {
                             ForEach(anime.genres) { genre in
                                 Text(genre.name)
                                     .font(.footnote)
-                                    
+                                
                                     .padding(2)
                                     .padding(.horizontal, 4)
                                     .background(
@@ -85,7 +85,7 @@ struct AnimeDetailView: View {
                         .padding(10)
                     }
                 }
-                                
+                
                 Section(header: Text("Information")) {
                     CustomListRowView(rowContent: "\(anime.type ?? "")",
                                       rowLabel: "Type",
@@ -107,25 +107,34 @@ struct AnimeDetailView: View {
                                       rowLabel: "Source",
                                       rowIcon: "circle",
                                       rowTintColor: .blue)
-
+                    
+                    
+                }
+                
+                let a = getBroadcastDetails()
+                
+                Section(header: Text("Broadcast")) {
                     CustomListRowView(rowContent: "\(anime.status ?? "")",
                                       rowLabel: "Status",
                                       rowIcon: "calendar",
                                       rowTintColor: .blue)
-                }
-                
-                Section(header: Text("Broadcast")) {
-                    CustomListRowView(rowContent: "\(anime.broadcast?.day ?? "No information")",
-                                      rowContent2: "\(anime.broadcast?.string ?? "")",
-                                      rowLabel: "Asia/Tokyo",
-                                      rowIcon: "calendar",
-                                      rowTintColor: .blue)
                     
-                    CustomListRowView(rowContent: "\(Anime.calculateBroadcastDate(aired: anime.aired, broadcast: anime.broadcast) ?? "")",
-                                      rowContent2: "\(TimeZone.current.identifier) (\(TimeZone.current.abbreviation()!))",
-                                      rowLabel: "Local",
-                                      rowIcon: "clock",
-                                      rowTintColor: .blue)
+                    
+                    if a.showCalendar {
+                        CustomListRowView(rowContent: "\(anime.broadcast?.day ?? "No information")",
+                                          rowContent2: "\(anime.broadcast?.string ?? "")",
+                                          rowLabel: "Asia/Tokyo",
+                                          rowIcon: "calendar",
+                                          rowTintColor: .blue)
+                    }
+                    
+                    if a.showClock {
+                        CustomListRowView(rowContent: "\(Anime.calculateBroadcastDate(aired: anime.aired, broadcast: anime.broadcast) ?? "")",
+                                          rowContent2: "\(TimeZone.current.identifier) (\(TimeZone.current.abbreviation()!))",
+                                          rowLabel: "Local",
+                                          rowIcon: "clock",
+                                          rowTintColor: .blue)
+                    }
                 }
                 
                 Section(header: Text("Synopsis")) {
@@ -137,6 +146,28 @@ struct AnimeDetailView: View {
             }
         }
     }
+        
+    func getBroadcastDetails() -> (showCalendar: Bool, showClock: Bool) {
+        let showCalendar: Bool
+        let showClock: Bool
+        switch anime.status {
+            case "Finished Airing":
+            showCalendar = false
+            showClock = false
+        case "Airing":
+            showCalendar = true
+            showClock = true
+        case "Not yet aired":
+            showCalendar = false
+            showClock = false
+        default:
+            showCalendar = true
+            showClock = true
+        }
+        
+        return (showCalendar, showClock)
+    }
+    
 }
 
 #Preview {

@@ -43,7 +43,6 @@ final class Anime {
     var duration: String?
     var synopsis: String?
     var background: String?
-    var yearseason: String = ""// yyyyseason -> 2025spring
     var season: String?
     var year: Int?
     var rating: String?
@@ -51,6 +50,7 @@ final class Anime {
     var demographics: [JikanCommon]
     var broadcast: JikanBroadcast?
     var broadcast_local: JikanBroadcast?
+    
     var broadcastDay: Anime.BroadcastDays {
         if let broadcast = broadcast {
             return broadcast.getDayEnum()
@@ -65,6 +65,10 @@ final class Anime {
     var favorite_date: Date? = nil
     var delete: Bool = false
     var delete_date: Date? = nil
+    
+    //MARK: - From Request
+    var cYear: Int = 0 // 2025
+    var cSeason: String = "" //spring
     
     //MARK: - Methods
     init(data: JikanAnime)
@@ -93,7 +97,6 @@ final class Anime {
         demographics = data.demographics ?? []
         
         // Valores Persistentes Calculados
-        //yearseason = "\(data.year ?? data.aired?.prop?.from?.year ?? 0)\(data.season ?? Anime.calculateSeason(month: data.aired?.prop?.from?.month ?? 0).rawValue)"
         recalculatePersistentValues()
     }
     
@@ -126,7 +129,8 @@ final class Anime {
     }
     
     func recalculatePersistentValues() {
-        yearseason = "\(year ?? aired?.prop?.from?.year ?? 0)\(season ?? Anime.calculateSeason(month: aired?.prop?.from?.month ?? 0).rawValue)"
+        //cYear = year ?? aired?.prop?.from?.year ?? 0
+        //cSeason = season ?? Anime.calculateSeason(month: aired?.prop?.from?.month ?? 0).rawValue
     }
     
     func getBackupData() -> AnimeBackupData {
@@ -185,22 +189,34 @@ final class Anime {
         
         let animeList = JikanModel.getMockListData().map { Anime(data: $0) }
         
-            let anime1 = animeList[0]
-            let anime2 = animeList[1]
-            let anime3 = animeList[2]
-            let anime4 = animeList[3]
-            
-            anime2.favorite = true
-            anime2.favorite_date = Date()
-            
-            anime3.delete = true
-            anime3.delete_date = Date()
-            
-            
-            anime4.favorite = true
-            anime4.favorite_date = Date()
-            anime4.delete = true
-            anime4.delete_date = Date()
+        let cYear = Date().getYear()
+        let cSeason = Anime.calculateSeason(month: Date().getMonth()).rawValue
+        
+        let anime1 = animeList[0]
+        let anime2 = animeList[1]
+        let anime3 = animeList[2]
+        let anime4 = animeList[3]
+        
+        anime2.favorite = true
+        anime2.favorite_date = Date()
+        
+        anime3.delete = true
+        anime3.delete_date = Date()
+        
+        
+        anime4.favorite = true
+        anime4.favorite_date = Date()
+        anime4.delete = true
+        anime4.delete_date = Date()
+        
+        anime1.cYear = cYear
+        anime1.cSeason = cSeason
+        anime2.cYear = cYear
+        anime2.cSeason = cSeason
+        anime3.cYear = cYear
+        anime3.cSeason = cSeason
+        anime4.cYear = cYear
+        anime4.cSeason = cSeason
         
         var lista = [anime1, anime2, anime3, anime4]
         
@@ -211,6 +227,8 @@ final class Anime {
                 
                 newAnime.favorite = Bool.random()
                 newAnime.delete = Bool.random()
+                newAnime.cYear = cYear
+                newAnime.cSeason = cSeason
                 
                 lista.append(newAnime)
             }
