@@ -13,10 +13,20 @@ struct AnimeFavoriteListView: View {
     
     @Environment(\.modelContext) private var modelContext
     
-    @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete },
+    @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status != "Finished Airing" && $0.status != "Not yet aired" },
            sort: [
             SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
            ]) private var animes: [Anime] = []
+
+    @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Finished Airing" },
+           sort: [
+            SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
+           ]) private var animesFinalizados: [Anime] = []
+    
+    @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Not yet aired" },
+           sort: [
+            SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
+           ]) private var animesProximos: [Anime] = []
     
     var grouped: [String: [Anime]] {
         //Dictionary(grouping: animes) { $0.broadcast?.day ?? "N/A" }
@@ -30,11 +40,8 @@ struct AnimeFavoriteListView: View {
         NavigationView {
             List {
                 ForEach(dias, id: \.self) { type in
-                    
                     let countedAnime = grouped[type]?.count ?? 0
-                    
                     if countedAnime > 0 {
-                        
                         Section(header: Text(type)) {
                             ForEach(grouped[type] ?? []) { anime in
                                 NavigationLink (destination: AnimeDetailView(anime: anime)) {
@@ -68,9 +75,74 @@ struct AnimeFavoriteListView: View {
                         }
                     }
                 }
+                
+                Section (header: Text("Comming soon")) {
+                    ForEach(animesProximos, id: \.id) { anime in
+                        NavigationLink (destination: AnimeDetailView(anime: anime)) {
+                            AnimeRowView(anime: anime)
+                                .swipeActions(edge: .trailing) {
+                                    Button {
+                                        anime.delete.toggle()
+                                        anime.delete_date = Date()
+                                    } label: {
+                                        Label("Eliminar", systemImage: "trash")
+                                    }
+                                }
+                                .swipeActions(edge: .leading) {
+                                    Button {
+                                        withAnimation {
+                                            anime.favorite.toggle()
+                                            anime.favorite_date = Date()
+                                        }
+                                    } label: {
+                                        if anime.favorite {
+                                            Label("Quitar de favoritos", systemImage: "star")
+                                                .tint(.secondary)
+                                        } else {
+                                            Label("Agregar a favoritos", systemImage: "star.fill")
+                                                .tint(.yellow)
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+                
+                Section (header: Text("Ended")) {
+                    ForEach(animesFinalizados, id: \.id) { anime in
+                        NavigationLink (destination: AnimeDetailView(anime: anime)) {
+                            AnimeRowView(anime: anime)
+                                .swipeActions(edge: .trailing) {
+                                    Button {
+                                        anime.delete.toggle()
+                                        anime.delete_date = Date()
+                                    } label: {
+                                        Label("Eliminar", systemImage: "trash")
+                                    }
+                                }
+                                .swipeActions(edge: .leading) {
+                                    Button {
+                                        withAnimation {
+                                            anime.favorite.toggle()
+                                            anime.favorite_date = Date()
+                                        }
+                                    } label: {
+                                        if anime.favorite {
+                                            Label("Quitar de favoritos", systemImage: "star")
+                                                .tint(.secondary)
+                                        } else {
+                                            Label("Agregar a favoritos", systemImage: "star.fill")
+                                                .tint(.yellow)
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+
             }
             .overlay {
-                if animes.isEmpty {
+                if animes.isEmpty && animesFinalizados.isEmpty {
                     CustomContentUnavailableView(
                         icon: "star.slash.fill",
                         title: "No Anime",
@@ -94,6 +166,8 @@ struct AnimeFavoriteListView: View {
         return AnimeFavoriteListView()
             .modelContext(context)
     }
+    
+    
 }
 
 #Preview("Empty List") {
