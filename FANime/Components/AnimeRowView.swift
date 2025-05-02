@@ -74,6 +74,10 @@ struct AnimeRowView: View {
                         Text("\(anime.season ?? "")")
                     }
                     
+                    Spacer()
+                    Text("__/\(anime.episodes ?? 0)")
+                        .font(.caption)
+                    
                 }
        
                 

@@ -33,6 +33,7 @@ final class Anime {
     var portada: String?
     var portada_thumb: String?
     var titulo: String
+    var titulo_default: String?
     var titulos: [JikanTitle]
     var type: String?
     var source: String?
@@ -69,6 +70,7 @@ final class Anime {
     //MARK: - From Request
     var cYear: Int = 0 // 2025
     var cSeason: String = "" //spring
+    var cDate: Date? = nil
     
     //MARK: - Methods
     init(data: JikanAnime)

@@ -64,7 +64,6 @@ struct AnimeListView: View {
                             .font(.caption2)
                             .foregroundStyle(querySeason == .na ? .primary : .secondary)
                     }
-                    
                 }
                 Spacer()
                 Button {
@@ -78,7 +77,11 @@ struct AnimeListView: View {
                     
                     let countedAnime = grouped[type]?.count ?? 0
                     if countedAnime > 0 {
-                        Section(header: Text(type), footer: HStack {
+                        Section(header:
+                                    HStack{
+                                        Text(type).font(.title2)
+                                    },
+                                footer: HStack {
                             Spacer()
                             Text("\(countedAnime) \(countedAnime == 1 ? "anime" : "animes")")
                                 .font(.footnote)
@@ -134,6 +137,18 @@ struct AnimeListView: View {
                 }
             } //.LIST Overlay
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Button {
+                            //No-Op
+                        }
+                        label: {
+                            Label("Sort by: English Name", systemImage: "slider.horizontal.3")
+                        }
+                    } label: {
+                        Image(systemName:"slider.horizontal.3")
+                    }
+                }
                 ToolbarItem {
                     if self.isLoading {
                         ProgressView()
@@ -159,10 +174,6 @@ struct AnimeListView: View {
         })
         
     } //:BODY
-    
-    private func doNothing() {
-        
-    }
     
     private func updateData() {
         if querySeason == .na {
@@ -198,46 +209,6 @@ struct AnimeListView: View {
         }
     }
     
-    /*
-    private func fetchData() {
-        self.isLoading = true
-        JikanService.shared.getSeasonNow(page: self.currentPage)
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { result in
-                        switch result {
-                        case .failure(let error):
-                            errorMessage = error.localizedDescription
-                            break
-                        case .finished:
-                            print("Finished fetching data")
-                        }
-                },
-                receiveValue: { jikanModel in
-                    jikanModel.data.forEach { animeData in
-                        addAnime(anime: Anime(data:animeData), context: modelContext)
-                    }
-                    
-                    if (jikanModel.pagination?.has_next_page ?? false) {
-                        self.hasNextPage = true
-                        self.currentPage += 1
-                        
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            //Get next Part in 2 seconds...
-                            self.fetchData()
-                        }
-                    } else {
-                        self.isLoading = false
-                        self.currentPage = 1
-                        self.hasNextPage = false
-                        updateData()
-                    }
-                    
-                })
-            .store(in: &observers)
-        
-    }*/
-    
     private func fetchDataSeason() {
         self.isLoading = true
         JikanService.shared.getSeason(year: queryYear, season: querySeason, page: self.currentPage)
@@ -249,6 +220,14 @@ struct AnimeListView: View {
                             errorMessage = error.localizedDescription
                             break
                         case .finished:
+                            let jikanApiModel = JikanAPIModel(
+                                season: querySeason.rawValue,
+                                year: queryYear,
+                                date: Date(),
+                                response: 200)
+                            
+                             updateJikanApiData(apiData: jikanApiModel, context: modelContext)
+                            
                             print("Finished fetching data")
                         }
                 },
@@ -258,6 +237,7 @@ struct AnimeListView: View {
                         
                         anime.cYear = queryYear
                         anime.cSeason = querySeason.rawValue
+                        anime.cDate = Date()
                         
                         addAnime(anime: anime, context: modelContext)
                     }
@@ -282,8 +262,7 @@ struct AnimeListView: View {
     }
     
     func addAnime(anime: Anime, context: ModelContext) {
-        // Buscar si ya existe un anime con ese título
-        
+        // Buscar si ya existe un anime con ese id
         let mal_id = anime.mal_id
         
         let descriptor = FetchDescriptor<Anime>(predicate: #Predicate { $0.mal_id == mal_id })
@@ -299,6 +278,23 @@ struct AnimeListView: View {
         }
         // Si no existe, lo guardas
         context.insert(anime)
+    }
+    
+    func updateJikanApiData(apiData: JikanAPIModel, context: ModelContext) {
+        let id = apiData.id
+        
+        let descriptor = FetchDescriptor<JikanAPIModel>(predicate: #Predicate { $0.id == id })
+
+        if let existing = try? context.fetch(descriptor), !existing.isEmpty {
+            if let value = existing.first {
+                value.updateValues(data: apiData)
+            } else {
+                print("Algo raro sucedió.")
+            }
+            return
+        }
+        // Si no existe, lo guardas
+        context.insert(apiData)
     }
 
     
@@ -317,7 +313,7 @@ struct AnimeListView: View {
 
 #Preview("Empty List") {
     AnimeListView()
-        .modelContainer(for: Anime.self, inMemory: true)
+        .modelContainer(for: [Anime.self, JikanAPIModel.self], inMemory: true)
 }
 
 #Preview("Some Data List") {

@@ -16,35 +16,23 @@ struct AnimeDetailView: View {
             List {
                 Section {
                     VStack{
-                        ZStack (alignment: .topTrailing) {
+                      
                             
-                            VStack {
-                                Link(destination: URL(string: anime.mal_link ?? "")!) {
-                                    Image(systemName: "square.and.arrow.up")
-                                        .padding(.vertical)
-                                }
+                        HStack {
+                            Spacer()
+                            AsyncImage(url: URL(string: anime.portada ?? "")!) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 200)
+                                    .padding(.vertical)
                                 
-                                Link(destination: URL(string: anime.mal_link ?? "")!) {
-                                    Image(systemName: "link")
-                                        .padding(.vertical)
-                                }
+                            } placeholder: {
+                                ProgressView()
                             }
-                            
-                            HStack {
-                                Spacer()
-                                AsyncImage(url: URL(string: anime.portada ?? "")!) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 200)
-                                        .padding(.vertical)
-                                    
-                                } placeholder: {
-                                    ProgressView()
-                                }
-                                Spacer()
-                            }
+                            Spacer()
                         }
+                    
                         Text(anime.titulo)
                             .font(.title)
                         
@@ -84,6 +72,11 @@ struct AnimeDetailView: View {
                         }
                         .padding(10)
                     }
+                    
+                    CustomListRowView(rowContent: "Open in MAL",
+                                      rowLabel: "",
+                                      rowIcon: "square.and.arrow.up",
+                                      rowTintColor: .orange)
                 }
                 
                 Section(header: Text("Information")) {
@@ -91,6 +84,32 @@ struct AnimeDetailView: View {
                                       rowLabel: "Type",
                                       rowIcon: "circle",
                                       rowTintColor: .blue)
+                    
+                    LabeledContent {
+                        HStack {
+                            Text("1")
+                                .tint(.primary)
+                                .fontWeight(.medium)
+                            Text("/ \(anime.episodes ?? 0)")
+                                .tint(.pink)
+                                .fontWeight(.light)
+                                .font(.caption)
+                        }
+                        
+                    } label: {
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .frame(width: 30, height: 30)
+                                    .foregroundColor(.red)
+                                Image(systemName: "movie")
+                                    .foregroundColor(.white)
+                                    .fontWeight(.semibold)
+                            }
+                            Text("Episodes")
+                        }
+                        
+                    }
                     
                     CustomListRowView(rowContent: "\(anime.rating == nil ? "" : anime.rating!)",
                                       rowLabel: "Rating",

@@ -13,7 +13,7 @@ struct FANimeApp: App {
     var body: some Scene {
         WindowGroup {
             AnimeMainView()
-                .modelContainer(for: Anime.self)
+                .modelContainer(for: [Anime.self, JikanAPIModel.self])
         }
     }
 }
