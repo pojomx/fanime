@@ -80,6 +80,7 @@ final class Anime {
         portada = data.images?.jpg.large_image_url
         portada_thumb = data.images?.jpg.small_image_url
         titulo = data.titles?.first(where: { $0.type == "English" })?.title ?? data.titles?.first(where: { $0.type == "Default" })?.title ?? "N/A"
+        titulo_default = data.titles?.first(where: { $0.type == "Default" })?.title ?? "N/A"
         titulos = data.titles ?? []
         type = data.type
         source = data.source
@@ -108,6 +109,7 @@ final class Anime {
         portada = data.portada
         portada_thumb = data.portada_thumb
         titulo = data.titulo
+        titulo_default = data.titulo_default
         titulos = data.titulos
         type = data.type
         source = data.source

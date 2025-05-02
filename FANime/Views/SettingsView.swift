@@ -10,10 +10,11 @@ import SwiftData
 
 struct SettingsView: View {
     
-    @Environment(\.managedObjectContext) private var managedObkectContext
+    @Environment(\.modelContext) private var modelContext
     
     @Query private var jikanApiModelList: [JikanAPIModel] = []
-    
+    @Query private var animes: [Anime] = []
+        
     var body: some View {
         NavigationStack {
             List {
@@ -93,14 +94,7 @@ struct SettingsView: View {
                     }
                     
                     NavigationLink (destination: {
-                        List(jikanApiModelList) { item in
-                            HStack {
-                                Text(item.id)
-                                Spacer()
-                                Text("\(item.date)")
-                                    .font(.caption2)
-                            }
-                        }
+                        SettingsHistoryView()
                     }, label: {
                         HStack {
                             Spacer()
@@ -160,12 +154,17 @@ struct SettingsView: View {
     }
     
     func backupData() {
+        //1-Guardar la lista de anime descargado: JikanAPIModel
         
+        //2-Guardar la lista de anime favorito
+        //3-Guardar la lista de anime eliminado
     }
     
     func reviewDataIntegrity() {
         
     }
+    
+  
 }
 
 #Preview {
