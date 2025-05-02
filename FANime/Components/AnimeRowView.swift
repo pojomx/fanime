@@ -10,6 +10,7 @@ import SwiftUI
 struct AnimeRowView: View {
     
     let anime: Anime
+    var useEnglishName: Bool = true
 
     var body: some View {
         HStack {
@@ -27,12 +28,12 @@ struct AnimeRowView: View {
                 .padding(.trailing, 8)
             }.frame(maxWidth: 54)
             VStack (alignment: .leading) {
-                
-                Text(anime.titulo)
+
+                Text(useEnglishName ? anime.titulo : (anime.titulo_default ?? anime.titulo))
                     .font(.headline)
                     .fontWeight(.bold)
                
-                Text(anime.titulos.first(where: { $0.type == "Default" })?.title ?? "")
+                Text(useEnglishName ? anime.titulo_default ?? anime.titulo : anime.titulo)
                         .font(.footnote)
                 
                 HStack {

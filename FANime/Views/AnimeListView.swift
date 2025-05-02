@@ -31,6 +31,8 @@ struct AnimeListView: View {
     @State private var hasNextPage: Bool = false
     @State private var currentPage: Int = 1
     
+    @State private var filtrarIngles: Bool = true
+    
     //Other Combine Stuff
     @State private var observers: Set<AnyCancellable> = []
     
@@ -88,7 +90,7 @@ struct AnimeListView: View {
                         }) {
                             ForEach(grouped[type] ?? []) { anime in
                                 NavigationLink (destination: AnimeDetailView(anime: anime)) {
-                                    AnimeRowView(anime: anime)
+                                    AnimeRowView(anime: anime, useEnglishName: filtrarIngles)
                                         .swipeActions(edge: .trailing) {
                                             Button {
                                                 anime.delete.toggle()
@@ -140,10 +142,11 @@ struct AnimeListView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button {
-                            //No-Op
+                            filtrarIngles.toggle()
+                            updateData()
                         }
                         label: {
-                            Label("Sort by: English Name", systemImage: "slider.horizontal.3")
+                            Label("Sort by: \(filtrarIngles ? "English" : "Japanese") Name", systemImage: "slider.horizontal.3")
                         }
                     } label: {
                         Image(systemName:"slider.horizontal.3")
@@ -186,9 +189,17 @@ struct AnimeListView: View {
     private func updateData1() {
         let season = "\(querySeason.rawValue)" // 2025spring - 2025na - 0na
         
+        let sort: SortDescriptor<Anime>
+        
+        if filtrarIngles {
+            sort = SortDescriptor(\.titulo)
+        } else {
+            sort = SortDescriptor(\.titulo_default)
+        }
+        
         let descriptor = FetchDescriptor<Anime>(
             predicate: #Predicate { anime in anime.cSeason == season && anime.cYear == queryYear },
-            sortBy: [SortDescriptor(\.titulo)])
+            sortBy: [sort])
         do {
             animes = try modelContext.fetch(descriptor)
         } catch {
@@ -198,10 +209,17 @@ struct AnimeListView: View {
     
     private func updateData2() {
        
+        let sort: SortDescriptor<Anime>
+        
+        if filtrarIngles {
+            sort = SortDescriptor(\.titulo)
+        } else {
+            sort = SortDescriptor(\.titulo_default)
+        }
         
         let descriptor = FetchDescriptor<Anime>(
             predicate: #Predicate { anime in anime.cYear == queryYear }, // 2025...
-            sortBy: [SortDescriptor(\.titulo)])
+            sortBy: [sort])
         do {
             animes = try modelContext.fetch(descriptor)
         } catch {
