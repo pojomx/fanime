@@ -10,7 +10,10 @@ import SwiftUI
 struct AnimeRowView: View {
     
     let anime: Anime
-    var useEnglishName: Bool = true
+    
+    @AppStorage("useDefaultNames")
+    var useDefaultNames: Bool = true
+    
 
     var body: some View {
         HStack {
@@ -29,11 +32,11 @@ struct AnimeRowView: View {
             }.frame(maxWidth: 54)
             VStack (alignment: .leading) {
 
-                Text(useEnglishName ? anime.titulo : (anime.titulo_default ?? anime.titulo))
+                Text(useDefaultNames ? anime.titulo : (anime.titulo_default ?? anime.titulo))
                     .font(.headline)
                     .fontWeight(.bold)
                
-                Text(useEnglishName ? anime.titulo_default ?? anime.titulo : anime.titulo)
+                Text(useDefaultNames ? anime.titulo_default ?? anime.titulo : anime.titulo)
                         .font(.footnote)
                 
                 HStack {

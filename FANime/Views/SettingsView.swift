@@ -6,14 +6,13 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct SettingsView: View {
+
+    @AppStorage("useDefaultNames")
+    var useDefaultNames: Bool = true
     
-    @Environment(\.modelContext) private var modelContext
-    
-    @Query private var jikanApiModelList: [JikanAPIModel] = []
-    @Query private var animes: [Anime] = []
+    private var animes: [Anime] = Anime.getMockData()
         
     var body: some View {
         NavigationStack {
@@ -64,6 +63,26 @@ struct SettingsView: View {
                     
                 } //: Section header
                 .listRowSeparator(.hidden)
+                
+                Section {
+                    VStack {
+                        Toggle("Use english names", isOn: $useDefaultNames)
+                        HStack
+                        {
+                            Text("Turning this off, will display the default japanese names, and sort the lists using that as well.")
+                                .font(.footnote)
+                            Spacer()
+                        }
+                        withAnimation {
+                            AnimeRowView(anime: animes[0])
+                        }
+                    }
+
+                    
+                } header: {
+                    Text("Display information")
+                }
+                
                 
                 Section {
                     Text("The application is in development, and its a learning material, added a Backup feature that will store the Anime ID and if it was \"deleted\" or \"favorited\" so it can be restored if the database crashes.")

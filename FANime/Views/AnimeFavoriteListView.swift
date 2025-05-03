@@ -12,21 +12,12 @@ import Combine
 struct AnimeFavoriteListView: View {
     
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("useDefaultNames")
+    var useDefaultNames: Bool = true
     
-    @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status != "Finished Airing" && $0.status != "Not yet aired" },
-           sort: [
-            SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
-           ]) private var animes: [Anime] = []
-
-    @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Finished Airing" },
-           sort: [
-            SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
-           ]) private var animesFinalizados: [Anime] = []
-    
-    @Query(filter: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Not yet aired" },
-           sort: [
-            SortDescriptor(\Anime.titulo)                   // Luego por título ascendente
-           ]) private var animesProximos: [Anime] = []
+    @State private var animes: [Anime] = []
+    @State private var animesFinalizados: [Anime] = []
+    @State private var animesProximos: [Anime] = []
     
     var grouped: [String: [Anime]] {
         //Dictionary(grouping: animes) { $0.broadcast?.day ?? "N/A" }
@@ -151,9 +142,50 @@ struct AnimeFavoriteListView: View {
             }
             .navigationTitle("Favoritos")
             .onAppear() {
-                print("onAppear")
+                updateData()
             }
         }
+    }
+    
+    
+    private func updateData() {
+        let sort: SortDescriptor<Anime>
+        if useDefaultNames {
+            sort = SortDescriptor(\.titulo)
+        } else {
+            sort = SortDescriptor(\.titulo_default)
+        }
+        
+        let descriptor = FetchDescriptor<Anime>(
+            predicate: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status != "Finished Airing" && $0.status != "Not yet aired" },
+            sortBy: [sort])
+        
+        let descriptorFinalizados = FetchDescriptor<Anime>(
+            predicate: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Finished Airing" },
+            sortBy: [sort])
+        
+        let descriptorProximos = FetchDescriptor<Anime>(
+            predicate: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Not yet aired" },
+            sortBy: [sort])
+        
+        do {
+            animes = try modelContext.fetch(descriptor)
+        } catch {
+            print("error: \(error)")
+        }
+        
+        do {
+            animesFinalizados = try modelContext.fetch(descriptorFinalizados)
+        } catch {
+            print("error: \(error)")
+        }
+        
+        do {
+            animesProximos = try modelContext.fetch(descriptorProximos)
+        } catch {
+            print("error: \(error)")
+        }
+        
     }
     
     static func makeContainerPreview(container: ModelContainer) -> some View {
@@ -166,8 +198,6 @@ struct AnimeFavoriteListView: View {
         return AnimeFavoriteListView()
             .modelContext(context)
     }
-    
-    
 }
 
 #Preview("Empty List") {

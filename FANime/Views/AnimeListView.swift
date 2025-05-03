@@ -13,6 +13,9 @@ struct AnimeListView: View {
     
     @Environment(\.modelContext) private var modelContext
     
+    @AppStorage("useDefaultNames")
+    var useDefaultNames: Bool = true
+    
     let year = 2025
     
     @State private var animes: [Anime] = []
@@ -30,8 +33,6 @@ struct AnimeListView: View {
     @State private var isLoading: Bool = false
     @State private var hasNextPage: Bool = false
     @State private var currentPage: Int = 1
-    
-    @State private var filtrarIngles: Bool = true
     
     //Other Combine Stuff
     @State private var observers: Set<AnyCancellable> = []
@@ -90,7 +91,7 @@ struct AnimeListView: View {
                         }) {
                             ForEach(grouped[type] ?? []) { anime in
                                 NavigationLink (destination: AnimeDetailView(anime: anime)) {
-                                    AnimeRowView(anime: anime, useEnglishName: filtrarIngles)
+                                    AnimeRowView(anime: anime)
                                         .swipeActions(edge: .trailing) {
                                             Button {
                                                 anime.delete.toggle()
@@ -139,19 +140,6 @@ struct AnimeListView: View {
                 }
             } //.LIST Overlay
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        Button {
-                            filtrarIngles.toggle()
-                            updateData()
-                        }
-                        label: {
-                            Label("Sort by: \(filtrarIngles ? "English" : "Japanese") Name", systemImage: "slider.horizontal.3")
-                        }
-                    } label: {
-                        Image(systemName:"slider.horizontal.3")
-                    }
-                }
                 ToolbarItem {
                     if self.isLoading {
                         ProgressView()
@@ -191,7 +179,7 @@ struct AnimeListView: View {
         
         let sort: SortDescriptor<Anime>
         
-        if filtrarIngles {
+        if useDefaultNames {
             sort = SortDescriptor(\.titulo)
         } else {
             sort = SortDescriptor(\.titulo_default)
@@ -211,7 +199,7 @@ struct AnimeListView: View {
        
         let sort: SortDescriptor<Anime>
         
-        if filtrarIngles {
+        if useDefaultNames {
             sort = SortDescriptor(\.titulo)
         } else {
             sort = SortDescriptor(\.titulo_default)

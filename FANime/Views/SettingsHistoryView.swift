@@ -43,6 +43,17 @@ struct SettingsHistoryView: View {
                         Spacer()
                         Text("\(item.date)")
                             .font(.caption2)
+                    }                    
+                    .swipeActions(edge: .trailing) {
+                        Button {
+                            withAnimation{
+                                modelContext.delete(item)
+                                try? modelContext.save()
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                                .tint(.secondary)
+                        }
                     }
                 }
                 Button {
@@ -58,7 +69,9 @@ struct SettingsHistoryView: View {
     
     func downloadAllData() {
         for season in jikanApiModelList {
-            seasonsToDownload.append(season)
+            if season.season != "na" {
+                seasonsToDownload.append(season)
+            }
         }
         self.isDownloading = true
         if let season = seasonsToDownload.popLast() {
