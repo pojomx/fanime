@@ -87,30 +87,6 @@ struct SettingsView: View {
                 Section {
                     Text("The application is in development, and its a learning material, added a Backup feature that will store the Anime ID and if it was \"deleted\" or \"favorited\" so it can be restored if the database crashes.")
                         .font(.footnote)
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            backupData()
-                        }) {
-                            Text("Backup")
-                        }
-                        Spacer()
-                        Button(action: {
-                            restoreData()
-                        }) {
-                            Text("Restore")
-                        }
-                        Spacer()
-                    }
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            reviewDataIntegrity()
-                        }) {
-                            Text("Verify Integrity of Data")
-                        }
-                        Spacer()
-                    }
                     
                     NavigationLink (destination: {
                         SettingsHistoryView()
@@ -167,23 +143,6 @@ struct SettingsView: View {
             } //: List
         }//: Nav Stack
     }
-    
-    func restoreData() {
-        
-    }
-    
-    func backupData() {
-        //1-Guardar la lista de anime descargado: JikanAPIModel
-        
-        //2-Guardar la lista de anime favorito
-        //3-Guardar la lista de anime eliminado
-    }
-    
-    func reviewDataIntegrity() {
-        
-    }
-    
-  
 }
 
 #Preview {
