@@ -1,79 +1,49 @@
 //
-//  SettingsHistoryView.swift
+//  SettingsHistoryViewModel.swift
 //  FANime
 //
-//  Created by Alan Milke on 02/05/25.
+//  Created by Alan Milke on 26/05/25.
 //
-
-import SwiftUI
+import Foundation
 import SwiftData
 import Combine
 
-struct SettingsHistoryView: View {
-    
-    @Environment(\.modelContext) private var modelContext
-    @Query private var jikanApiModelList: [JikanAPIModel]
+class SettingsHistoryViewModel: ObservableObject {
+
+    var modelContext : ModelContext?
     
     //Info about display data
-    @State private var errorMessage: String = ""
-    @State private var isDownloading: Bool = false
-    @State private var isLoading: Bool = false
-    @State private var hasNextPage: Bool = false
-    @State private var currentPage: Int = 1
+    var errorMessage: String = ""
+    @Published
+    var isDownloading: Bool = false
+    var isLoading: Bool = false
+    var hasNextPage: Bool = false
+    var currentPage: Int = 1
     
-    @State private var message: String = ""
+    var message: String = ""
     
     
-    @State private var seasonsToDownload: [JikanAPIModel] = []
+    var seasonsToDownload: [JikanAPIModel] = []
+    
+    @Published
+    var jikanList: [JikanAPIModel] = []
     
     //Other Combine Stuff
-    @State private var observers: Set<AnyCancellable> = []
+    var observers: Set<AnyCancellable> = []
     
-    var body: some View {
-        VStack {
-            if isLoading {
-                CustomContentUnavailableView(
-                    icon: "icloud.and.arrow.down",
-                    title: "Downloading",
-                    description: "\(message)")
-            } else {
-                List(jikanApiModelList) { item in
-                    HStack {
-                        Text(item.id)
-                        Spacer()
-                        Text("\(item.date)")
-                            .font(.caption2)
-                    }                    
-                    .swipeActions(edge: .trailing) {
-                        Button {
-                            withAnimation{
-                                modelContext.delete(item)
-                                try? modelContext.save()
-                            }
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                                .tint(.secondary)
-                        }
-                    }
-                }
-                Button {
-                    downloadAllData()
-                } label: {
-                    Text("Regenerar base de datos...")
-                }
-                .disabled(isDownloading)
-            }
-        }
+    public init () {
+        
     }
     
-    
     func downloadAllData() {
-        for season in jikanApiModelList {
+        
+        self.isDownloading = true
+        for season in jikanList {
             if season.season != "na" {
                 seasonsToDownload.append(season)
             }
         }
-        self.isDownloading = true
+        
         if let season = seasonsToDownload.popLast() {
             fetchDataSeason(season: season.season, year: season.year)
         } else {
@@ -82,6 +52,8 @@ struct SettingsHistoryView: View {
     }
     
     private func fetchDataSeason(season: String, year: Int) {
+        guard let modelContext = self.modelContext else { return }
+        
         self.isLoading = true
         
         let animeSeason = AnimeSeason(rawValue: season) ?? .na
@@ -94,7 +66,7 @@ struct SettingsHistoryView: View {
                 receiveCompletion: { result in
                         switch result {
                         case .failure(let error):
-                            errorMessage = error.localizedDescription
+                            self.errorMessage = error.localizedDescription
                             break
                         case .finished:
                             let jikanApiModel = JikanAPIModel(
@@ -103,7 +75,7 @@ struct SettingsHistoryView: View {
                                 date: Date(),
                                 response: 200)
                             
-                             updateJikanApiData(apiData: jikanApiModel, context: modelContext)
+                            self.updateJikanApiData(apiData: jikanApiModel, context: modelContext)
                             
                             print("Finished fetching data")
                         }
@@ -116,7 +88,7 @@ struct SettingsHistoryView: View {
                         anime.cSeason = season
                         anime.cDate = Date()
                         
-                        addAnime(anime: anime, context: modelContext)
+                        self.addAnime(anime: anime, context: modelContext)
                     }
                     
                     if (jikanModel.pagination?.has_next_page ?? false) {
@@ -132,7 +104,7 @@ struct SettingsHistoryView: View {
                         self.currentPage = 1
                         self.hasNextPage = false
                         //PEEEEERO
-                        if let season = seasonsToDownload.popLast() {
+                        if let season = self.seasonsToDownload.popLast() {
                             self.fetchDataSeason(season: season.season, year: season.year)
                         } else {
                             self.isDownloading = false
@@ -151,7 +123,6 @@ struct SettingsHistoryView: View {
 
         if let existing = try? context.fetch(descriptor), !existing.isEmpty {
             if let value = existing.first {
-                print("Ya existe un anime con ese mal_id, valores actualizados.")
                 value.updateValues(data: anime)
             } else {
                 print("Algo raro sucedió.")
@@ -178,8 +149,25 @@ struct SettingsHistoryView: View {
         // Si no existe, lo guardas
         context.insert(apiData)
     }
-}
-
-#Preview {
-    SettingsHistoryView()
+    
+    func deleteItem(_ item: JikanAPIModel) {
+        
+        guard let modelContext = self.modelContext else { return }
+        modelContext.delete(item)
+        try? modelContext.save()
+        
+        updateData()
+    }
+    
+    public func updateData() {
+        guard let modelContext = self.modelContext else { return }
+        
+        let descriptor = FetchDescriptor<JikanAPIModel>()
+    
+        do {
+            jikanList = try modelContext.fetch(descriptor)
+        } catch {
+            print("error: \(error)")
+        }
+    }
 }
