@@ -9,11 +9,9 @@ import SwiftUI
 
 struct SettingsView: View {
 
-    @AppStorage("useDefaultNames")
-    var useDefaultNames: Bool = true
+    @ObservedObject
+    var viewModel: SettingsViewModel = SettingsViewModel()
     
-    private var animes: [Anime] = Anime.getMockData()
-        
     var body: some View {
         NavigationStack {
             List {
@@ -66,7 +64,7 @@ struct SettingsView: View {
                 
                 Section {
                     VStack {
-                        Toggle("Use english names", isOn: $useDefaultNames)
+                        Toggle("Use english names", isOn: $viewModel.useDefaultNames)
                         HStack
                         {
                             Text("Turning this off, will display the default japanese names, and sort the lists using that as well.")
@@ -74,7 +72,7 @@ struct SettingsView: View {
                             Spacer()
                         }
                         withAnimation {
-                            AnimeRowView(anime: animes[0])
+                            AnimeRowView(anime: viewModel.animes[0])
                         }
                     }
 
