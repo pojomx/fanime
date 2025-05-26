@@ -12,29 +12,17 @@ import Combine
 struct AnimeFavoriteListView: View {
     
     @Environment(\.modelContext) private var modelContext
-    @AppStorage("useDefaultNames")
-    var useDefaultNames: Bool = true
-    
-    @State private var animes: [Anime] = []
-    @State private var animesFinalizados: [Anime] = []
-    @State private var animesProximos: [Anime] = []
-    
-    var grouped: [String: [Anime]] {
-        //Dictionary(grouping: animes) { $0.broadcast?.day ?? "N/A" }
-        Dictionary(grouping: animes) { $0.broadcast_local?.day ?? $0.broadcast?.day ?? "N/A" }
-    }
+    @ObservedObject var viewModel = AnimeFavoriteListViewModel()
     
     var body: some View {
-        let groupDays = grouped.keys.sorted()
-        let dias = Anime.BroadcastDays.allCases.map(\.rawValue)
-        
+
         NavigationView {
             List {
-                ForEach(dias, id: \.self) { type in
-                    let countedAnime = grouped[type]?.count ?? 0
+                ForEach(viewModel.dias, id: \.self) { type in
+                    let countedAnime = viewModel.grouped[type]?.count ?? 0
                     if countedAnime > 0 {
                         Section(header: Text(type)) {
-                            ForEach(grouped[type] ?? []) { anime in
+                            ForEach(viewModel.grouped[type] ?? []) { anime in
                                 NavigationLink (destination: AnimeDetailView(anime: anime)) {
                                     AnimeRowView(anime: anime)
                                         .swipeActions(edge: .trailing) {
@@ -66,9 +54,8 @@ struct AnimeFavoriteListView: View {
                         }
                     }
                 }
-                
                 Section (header: Text("Comming soon")) {
-                    ForEach(animesProximos, id: \.id) { anime in
+                    ForEach(viewModel.animesProximos, id: \.id) { anime in
                         NavigationLink (destination: AnimeDetailView(anime: anime)) {
                             AnimeRowView(anime: anime)
                                 .swipeActions(edge: .trailing) {
@@ -100,7 +87,7 @@ struct AnimeFavoriteListView: View {
                 }
                 
                 Section (header: Text("Ended")) {
-                    ForEach(animesFinalizados, id: \.id) { anime in
+                    ForEach(viewModel.animesFinalizados, id: \.id) { anime in
                         NavigationLink (destination: AnimeDetailView(anime: anime)) {
                             AnimeRowView(anime: anime)
                                 .swipeActions(edge: .trailing) {
@@ -130,10 +117,9 @@ struct AnimeFavoriteListView: View {
                         }
                     }
                 }
-
             }
             .overlay {
-                if animes.isEmpty && animesFinalizados.isEmpty {
+                if viewModel.animes.isEmpty && viewModel.animesFinalizados.isEmpty {
                     CustomContentUnavailableView(
                         icon: "star.slash.fill",
                         title: "No Anime",
@@ -142,61 +128,10 @@ struct AnimeFavoriteListView: View {
             }
             .navigationTitle("Favoritos")
             .onAppear() {
-                updateData()
+                viewModel.modelContext = modelContext
+                viewModel.updateData()
             }
         }
-    }
-    
-    
-    private func updateData() {
-        let sort: SortDescriptor<Anime>
-        if useDefaultNames {
-            sort = SortDescriptor(\.titulo)
-        } else {
-            sort = SortDescriptor(\.titulo_default)
-        }
-        
-        let descriptor = FetchDescriptor<Anime>(
-            predicate: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status != "Finished Airing" && $0.status != "Not yet aired" },
-            sortBy: [sort])
-        
-        let descriptorFinalizados = FetchDescriptor<Anime>(
-            predicate: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Finished Airing" },
-            sortBy: [sort])
-        
-        let descriptorProximos = FetchDescriptor<Anime>(
-            predicate: #Predicate<Anime> { $0.favorite && !$0.delete && $0.status == "Not yet aired" },
-            sortBy: [sort])
-        
-        do {
-            animes = try modelContext.fetch(descriptor)
-        } catch {
-            print("error: \(error)")
-        }
-        
-        do {
-            animesFinalizados = try modelContext.fetch(descriptorFinalizados)
-        } catch {
-            print("error: \(error)")
-        }
-        
-        do {
-            animesProximos = try modelContext.fetch(descriptorProximos)
-        } catch {
-            print("error: \(error)")
-        }
-        
-    }
-    
-    static func makeContainerPreview(container: ModelContainer) -> some View {
-        let context = ModelContext(container)
-        
-        Anime.getMockData(count: 10).forEach { item in
-            context.insert(item)
-        }
-
-        return AnimeFavoriteListView()
-            .modelContext(context)
     }
 }
 
@@ -209,5 +144,5 @@ struct AnimeFavoriteListView: View {
 #Preview("Some Data List") {
     let container = try! ModelContainer(for: Anime.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     
-    return AnimeFavoriteListView.makeContainerPreview(container: container)
+    return AnimeFavoriteListViewModel.makeContainerPreview(container: container)
 }
