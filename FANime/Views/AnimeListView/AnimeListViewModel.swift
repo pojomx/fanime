@@ -10,19 +10,21 @@ import SwiftUI
 import SwiftData
 import Combine
 
+@Observable
 class AnimeListViewModel : ObservableObject {
     
     var modelContext : ModelContext?
     
-    @AppStorage("useDefaultNames") var useDefaultNames: Bool = true
-    
+    var useDefaultNames: Bool = true
     let year = 2025
-    
-    private var animes: [Anime] = []
     
     var grouped: [String: [Anime]] {
         Dictionary(grouping: animes) { $0.type ?? "N/A" }
     }
+    
+    var tipos : [String] = []
+    
+    public var animes: [Anime] = []
     
     public var errorMessage: String = "";
     
@@ -98,6 +100,7 @@ class AnimeListViewModel : ObservableObject {
         } else {
             updateData1()
         }
+        tipos = Anime.Tipos.allCases.map(\.rawValue)
     }
     
     public func updateData1() {
@@ -157,7 +160,7 @@ class AnimeListViewModel : ObservableObject {
         (queryYear, querySeason) = Anime.getNextSeason(year: queryYear, season: querySeason)
     }
     
-    private func fetchDataSeason() {
+    public func fetchDataSeason() {
         
         guard let modelContext else { return }
         

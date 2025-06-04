@@ -263,6 +263,10 @@ final class Anime {
         case sunday = "Sundays"
         case na = "N/A" //Other
     }
+    
+    static func getTiposStringArray() -> [String] {
+        return Anime.Tipos.allCases.map(\.rawValue)
+    }
 }
 
 extension Anime {

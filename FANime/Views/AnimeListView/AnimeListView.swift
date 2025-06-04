@@ -15,46 +15,10 @@ struct AnimeListView: View {
     private var viewModel : AnimeListViewModel = AnimeListViewModel()
     
     var body: some View {
-        let tipos = Anime.Tipos.allCases.map(\.rawValue)
         NavigationStack {
-            HStack {
-                Button {
-                    viewModel.btnPreviousSeason()
-                } label: {
-                    Text(" < prev")
-                }
-                Spacer()
-                VStack {
-                    Text(String(viewModel.queryYear))
-                        .font(.caption)
-                    HStack {
-                        Text("winter")
-                            .font(.caption2)
-                            .foregroundStyle(viewModel.querySeason == .winter ? .primary : .secondary)
-                        Text("spring")
-                            .font(.caption2)
-                            .foregroundStyle(viewModel.querySeason == .spring ? .primary : .secondary)
-                        Text("summer")
-                            .font(.caption2)
-                            .foregroundStyle(viewModel.querySeason == .summer ? .primary : .secondary)
-                        Text("fall")
-                            .font(.caption2)
-                            .foregroundStyle(viewModel.querySeason == .fall ? .primary : .secondary)
-                        Text("others")
-                            .font(.caption2)
-                            .foregroundStyle(viewModel.querySeason == .na ? .primary : .secondary)
-                    }
-                }
-                Spacer()
-                Button {
-                    viewModel.btnNextSeason()
-                } label: {
-                    Text("next >")
-                }
-            }
+            AnimeListSeasonNavigatorView(viewModel: viewModel)
             List {
-                ForEach(tipos, id: \.self) { type in
-                    
+                ForEach(Anime.getTiposStringArray(), id: \.self) { type in
                     let countedAnime = viewModel.grouped[type]?.count ?? 0
                     if countedAnime > 0 {
                         Section(header:
@@ -118,7 +82,7 @@ struct AnimeListView: View {
             } //.LIST Overlay
             .toolbar {
                 ToolbarItem {
-                    if self.isLoading {
+                    if viewModel.isLoading {
                         ProgressView()
                     } else {
                         Button(action: viewModel.fetchDataSeason){
@@ -138,7 +102,6 @@ struct AnimeListView: View {
         .onChange(of: viewModel.querySeason, { oldValue, newValue in
             viewModel.updateData()
         })
-        
     } //:BODY
     
     
